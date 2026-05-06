@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4 pb-5">
+    <!-- Tombol Kembali -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'home' %}" class="text-dark me-3" style="text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> <span class="ms-1 fw-bold">Kembali</span>
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4">Edit Rencana</h5>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <!-- Tipe Rencana -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Tipe Rencana</label>
+                    <select name="tipe" id="tipeSelect" class="form-select" style="border-radius: 12px;" onchange="updateFormLayout()">
+                        <option value="tugas" {% if jadwal.tipe == 'tugas' %}selected{% endif %}>Tugas</option>
+                        <option value="belajar" {% if jadwal.tipe == 'belajar' %}selected{% endif %}>Kegiatan Belajar</option>
+                    </select>
+                </div>
+
+                <!-- Nama (Label berubah via JS) -->
+                <div class="mb-3">
+                    <label id="labelNama" class="form-label small fw-bold">Nama Tugas</label>
+                    <input type="text" name="kegiatan" class="form-control" 
+                           value="{{ jadwal.kegiatan }}" required style="border-radius: 12px;" 
+                           placeholder="Contoh: Laporan Jaringan Komputer">
+                </div>
+
+                <!-- Baris Waktu -->
+                <div class="row">
+                    <!-- Jam Mulai / Deadline -->
+                    <div id="colMulai" class="col-6 mb-3">
+                        <label id="labelMulai" class="form-label small fw-bold">Jam Deadline</label>
+                        
+                        <!-- BAGIAN YANG DIGANTI: Menambahkan ID dan logika pengecekan input -->
+                        {% if jadwal.tipe == 'tugas' %}
+                            <input type="time" name="jam_deadline" id="inputWaktu" class="form-control" 
+                                value="{{ jadwal.jam_deadline|time:'H:i' }}" style="border-radius: 12px;">
+                        {% else %}
+                            <input type="time" name="waktu_mulai" id="inputWaktu" class="form-control" 
+                                value="{{ jadwal.waktu_mulai|time:'H:i' }}" style="border-radius: 12px;">
+                        {% endif %}
+                    </div>
+
+                    <!-- Jam Selesai (Hanya muncul jika Belajar) -->
+                    <div id="colSelesai" class="col-6 mb-3">
+                        <label class="form-label small fw-bold">Waktu Selesai</label>
+                        <input type="time" name="waktu_selesai" class="form-control" 
+                            value="{{ jadwal.waktu_selesai|time:'H:i' }}" style="border-radius: 12px;">
+                    </div>
+                </div>
+
+                <!-- Tanggal (Label berubah via JS) -->
+                <div class="mb-4">
+                    <label id="labelTanggal" class="form-label small fw-bold">Tanggal Deadline</label>
+                    <input type="date" name="tanggal" class="form-control" 
+                           value="{{ jadwal.tanggal|date:'Y-m-d' }}" required style="border-radius: 12px;">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" 
+                        style="border-radius: 12px; background: #1a1a8e; border: none; padding: 12px; font-weight: 600;">
+                    Simpan Perubahan
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script untuk Logika Dinamis -->
+<script>
+function updateFormLayout() {
+    const tipe = document.getElementById('tipeSelect').value;
+    const labelNama = document.getElementById('labelNama');
+    const labelMulai = document.getElementById('labelMulai');
+    const labelTanggal = document.getElementById('labelTanggal');
+    const colSelesai = document.getElementById('colSelesai');
+    const colMulai = document.getElementById('colMulai');
+    const inputWaktu = document.getElementById('inputWaktu');
+
+    if (tipe === 'tugas') {
+        // Mode Tugas
+        labelNama.innerText = "Nama Tugas";
+        labelMulai.innerText = "Jam Deadline";
+        labelTanggal.innerText = "Tanggal Deadline";
+        colSelesai.style.display = "none"; // Sembunyikan kolom selesai
+        colMulai.className = "col-12 mb-3"; // Jadikan kolom jam deadline lebar penuh
+    } else {
+        // Mode Belajar
+        labelNama.innerText = "Nama Kegiatan Belajar";
+        labelMulai.innerText = "Waktu Mulai";
+        labelTanggal.innerText = "Tanggal Belajar";
+        colSelesai.style.display = "block"; // Munculkan kolom selesai
+        colMulai.className = "col-6 mb-3"; // Kembali bagi dua kolom
+    }
+}
+
+// Jalankan fungsi saat pertama kali halaman dimuat untuk menyesuaikan data yang ada
+window.onload = updateFormLayout;
+</script>
+{% endblock %}

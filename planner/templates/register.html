@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - StudAI</title>
+    </head>
+<body>
+    <div class="login-container">
+        <img src="{% static 'planner/rocket_logo.png' %}" alt="Logo" class="logo">
+        <h1 class="app-name">StudAI</h1>
+        <p class="slogan">Join our AI-Powered Learning Community</p>
+
+        <form method="post" class="django-form">
+            {% csrf_token %}
+            {{ form.as_p }} <button type="submit" class="btn-login">Register</button>
+        </form>
+
+        <p class="register-text">
+            Already have an account? <a href="{% url 'login' %}" class="register-link">Login Here</a>
+        </p>
+    </div>
+</body>
+</html>

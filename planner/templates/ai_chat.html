@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Chat Container */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 75vh;
+        background: transparent;
+    }
+
+    .chat-messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        scrollbar-width: none;
+    }
+    .chat-messages::-webkit-scrollbar { display: none; }
+
+    /* Bubble Chat Style */
+    .bubble {
+        max-width: 80%;
+        padding: 12px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        line-height: 1.5;
+        position: relative;
+    }
+
+    .bubble.ai {
+        align-self: flex-start;
+        background-color: white;
+        color: #333;
+        border-bottom-left-radius: 2px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+
+    .bubble.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #000066 0%, #0000cc 100%);
+        color: white;
+        border-bottom-right-radius: 2px;
+        box-shadow: 0 4px 15px rgba(0,0,64,0.2);
+    }
+
+    /* Input Area Baru - Ala Gemini */
+    .chat-input-area {
+        background: white;
+        padding: 10px 15px;
+        border-radius: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .input-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .btn-icon {
+        background: transparent;
+        border: none;
+        color: #666;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-icon:hover {
+        background-color: #f0f2f5;
+        color: #000066;
+    }
+
+    .chat-input {
+        border: none;
+        flex-grow: 1;
+        outline: none;
+        font-size: 14px;
+        background: transparent;
+        padding: 8px 0;
+    }
+
+    .btn-send {
+        background: #000066;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: 0.3s;
+    }
+    .btn-send:hover { transform: scale(1.1); }
+
+    /* Suggestion Chips */
+    .suggestion-chips {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scrollbar-width: none;
+    }
+    .chip {
+        white-space: nowrap;
+        padding: 8px 15px;
+        background: #eef2ff;
+        border-radius: 20px;
+        font-size: 12px;
+        color: #000066;
+        cursor: pointer;
+        border: 1px solid #d0d7ff;
+    }
+
+    /* Typing & Upload Indicator */
+    .status-info {
+        font-size: 11px;
+        color: #888;
+        margin-left: 15px;
+        height: 15px;
+    }
+
+    #fileInput { display: none; }
+</style>
+
+<div class="chat-header mt-3 mb-4">
+    <h4 class="fw-bold mb-0">StudAI Chat</h4>
+    <p class="text-muted small">Tanya soal atau atur jadwalmu di sini</p>
+</div>
+
+<div class="chat-container">
+    <!-- Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+        <div class="bubble ai shadow-sm">
+            Halo Ahmad! Ada tugas atau materi kuliah yang ingin dibahas? Upload file tugasmu atau kirim pesan suara juga bisa lho!
+        </div>
+    </div>
+
+    <!-- Suggestion Chips -->
+    <div class="suggestion-chips">
+        <div class="chip" onclick="fillInput('Tolong rangkumkan materi ini...')">📝 Rangkum Materi</div>
+        <div class="chip" onclick="fillInput('Atur jadwal belajar AI untuk tugas...')">📅 Atur Jadwal AI</div>
+        <div class="chip" onclick="fillInput('Jelaskan konsep dasar...')">💡 Tanya Konsep</div>
+    </div>
+
+    <!-- Status Info (Typing/Uploading) -->
+    <div class="status-info" id="statusInfo"></div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <div class="input-actions">
+            <!-- File Upload -->
+            <input type="file" id="fileInput" onchange="handleFileUpload()">
+            <button class="btn-icon" title="Upload File" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <!-- Voice Input -->
+            <button class="btn-icon" id="voiceBtn" title="Voice Input" onclick="toggleVoice()">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+
+        <input type="text" class="chat-input" id="userInput" placeholder="Ketik pesan Ahmad di sini...">
+        
+        <button class="btn-send" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const statusInfo = document.getElementById('statusInfo');
+
+    function fillInput(text) {
+        userInput.value = text;
+        userInput.focus();
+    }
+
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (message !== "") {
+            addBubble(message, 'user');
+            userInput.value = "";
+            showAiResponse("Siap Ahmad! Aku akan memproses permintaanmu.");
+        }
+    }
+
+    function addBubble(text, sender) {
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${sender} shadow-sm`;
+        bubble.innerHTML = text;
+        chatMessages.appendChild(bubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showAiResponse(text) {
+        statusInfo.innerText = "StudAI sedang berpikir...";
+        setTimeout(() => {
+            statusInfo.innerText = "";
+            addBubble(text, 'ai');
+        }, 2000);
+    }
+
+    // Fitur Upload File (Simulasi)
+    function handleFileUpload() {
+        const file = document.getElementById('fileInput').files[0];
+        if (file) {
+            statusInfo.innerText = `Mengunggah ${file.name}...`;
+            setTimeout(() => {
+                statusInfo.innerText = "";
+                addBubble(`<i class="fas fa-file-alt me-2"></i> File terunggah: <b>${file.name}</b>`, 'user');
+                showAiResponse(`File <b>${file.name}</b> berhasil diterima! Apa yang harus aku lakukan dengan file ini?`);
+            }, 1500);
+        }
+    }
+
+    // Fitur Voice (Simulasi)
+    let isRecording = false;
+    function toggleVoice() {
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (!isRecording) {
+            isRecording = true;
+            voiceBtn.style.color = "red";
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            statusInfo.innerText = "StudAI sedang mendengarkan...";
+        } else {
+            isRecording = false;
+            voiceBtn.style.color = "#666";
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            statusInfo.innerText = "";
+            userInput.value = "Tolong jelaskan materi dari rekaman tadi.";
+            sendMessage();
+        }
+    }
+
+    // Fungsi untuk mengecek apakah ada pesan otomatis dari halaman lain
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const preset = urlParams.get('preset');
+
+    if (preset === 'atur_jadwal') {
+        // Otomatis mengisi input chat
+        const input = document.getElementById('userInput');
+        input.value = "Halo StudAI! Tolong bantu aku atur jadwal belajar untuk hari ini.";
+        
+        // Memberikan efek fokus agar user tinggal lanjut mengetik
+        input.focus();
+
+        // (Opsional) Langsung kirim pesan jika Ahmad mau
+        // sendMessage(); 
+    }
+}
+
+    // Tekan Enter untuk mengirim
+    userInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+</script>
+{% endblock %}

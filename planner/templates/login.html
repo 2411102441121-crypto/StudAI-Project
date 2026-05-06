@@ -1,0 +1,81 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - StudAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Gaya Dasar */
+        body { font-family: 'Poppins', sans-serif; background-color: #F8F9FA; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .login-container { background-color: #fff; width: 360px; padding: 40px; border-radius: 20px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05); text-align: center; }
+        
+        /* Logo & Judul */
+        .logo { width: 100px; height: auto; margin-bottom: 20px; }
+        .app-name { font-size: 36px; font-weight: 700; color: #101962; margin: 0; }
+        .slogan { font-size: 14px; color: #333; margin-top: 10px; margin-bottom: 30px; }
+
+        /* Input Fields */
+        .django-form input { width: 100%; padding: 15px; margin-bottom: 15px; border: none; background-color: #E0E0E0; border-radius: 30px; font-size: 16px; color: #828282; box-sizing: border-box; }
+        .django-form input::placeholder { color: #828282; }
+        
+        /* Tombol & Link */
+        .forgot-password { text-align: right; font-size: 12px; color: #828282; margin-top: -10px; margin-bottom: 20px; display: block; text-decoration: none; }
+        .btn-login { width: 100%; padding: 15px; background-color: #101962; color: #fff; border: none; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+        
+        /* Pembatas */
+        .divider { display: flex; align-items: center; text-align: center; color: #828282; font-size: 14px; margin: 20px 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #E0E0E0; }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        /* Tombol Google */
+        .btn-google { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 100%; padding: 12px; border: 1px solid #E0E0E0; 
+            border-radius: 30px; text-decoration: none; color: #000; font-weight: 600; box-sizing: border-box;
+        }
+        .google-icon { width: 20px; margin-right: 10px; }
+
+        /* Register Link */
+        .register-text { margin-top: 25px; color: #828282; font-size: 14px; }
+        .register-link { color: #000; font-weight: 700; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="{% static 'planner/rocket_logo.png' %}" alt="StudAI Logo" class="logo">
+        <h1 class="app-name">StudAI</h1>
+        <p class="slogan">Your AI-Powered Learning Companion</p>
+
+        <form method="post" class="django-form">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            
+            {% if error %}
+                <p style="color: red; font-size: 12px; margin-top: -10px; margin-bottom: 10px;">{{ error }}</p>
+            {% endif %}
+    
+            <a href="{% url 'password_reset' %}" class="forgot-password">Forgot Password?</a>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+
+        <div class="divider">or log in with</div>
+
+            <!-- Bagian yang diperbaiki -->
+            <a href="{% provider_login_url 'google' %}" class="btn-google">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="google-icon" alt="Google">
+                Continue with Google
+            </a>
+
+        <p class="register-text">
+            Don’t have an account? <a href="{% url 'register' %}" class="register-link">Register Now</a>
+        </p>
+    </div>
+</body>
+</html>
