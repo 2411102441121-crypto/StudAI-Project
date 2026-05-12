@@ -6,3 +6,11 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')), 
     path('', include('planner.urls')),
 ]
+
+urlpatterns = [
+
+    path('admin/', admin.site.urls),
+
+    path('', include('planner.urls')),
+
+]

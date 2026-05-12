@@ -117,6 +117,37 @@ def schedule(request):
     semua_jadwal = Jadwal.objects.filter(user=request.user).order_by('waktu_mulai')
     return render(request, 'schedule.html', {'semua_jadwal': semua_jadwal})
 
+def profil(request):
+
+    total_tugas = Jadwal.objects.filter(
+        user=request.user,
+        tipe='tugas'
+    ).count()
+
+    total_belajar = Jadwal.objects.filter(
+        user=request.user,
+        tipe='belajar'
+    ).count()
+
+    semua_jadwal = Jadwal.objects.filter(
+        user=request.user
+    ).count()
+
+    context = {
+
+        'username': request.user.username,
+
+        'email': request.user.email,
+
+        'total_tugas': total_tugas,
+
+        'total_belajar': total_belajar,
+
+        'semua_jadwal': semua_jadwal,
+    }
+
+    return render(request, 'profil.html', context)
+
 def ai_chat(request):
     return render(request, 'ai_chat.html')
 

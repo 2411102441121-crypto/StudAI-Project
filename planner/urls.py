@@ -15,10 +15,12 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('tambah_jadwal/', views.tambah_jadwal, name='tambah_jadwal'),
     path('schedule/', views.schedule, name='schedule'),
+    path('profil/', views.profil, name='profil'),
     path('edit_jadwal/<int:pk>/', views.edit_jadwal, name='edit_jadwal'),
     path('hapus_jadwal/<int:id>/', views.hapus_jadwal, name='hapus_jadwal'),
     path('ai_chat/', views.ai_chat, name='ai_chat'),
     path('logout/', views.logout, name='logout'),
+
 
     # Reset Password
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
