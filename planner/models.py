@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User # Menghubungkan chat dengan user yang login
 from django.conf import settings
 
 # Model untuk daftar matakuliah/materi
@@ -25,3 +25,16 @@ class Jadwal(models.Model):
 
     def __str__(self):
         return f"{self.kegiatan} ({self.tipe})"
+    
+class ChatMessage(models.Model):
+    SENDER_CHOICES = [
+        ('user', 'User'),
+        ('ai', 'AI'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sender = models.CharField(max_length=10, choices=SENDER_CHOICES)
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.sender}: {self.message[:20]}"
