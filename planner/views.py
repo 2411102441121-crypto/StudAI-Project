@@ -6,6 +6,12 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required # Tambahkan ini agar aman
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import ChatMessage
+
+import requests
+import json
 
 @login_required # Home hanya bisa dibuka jika sudah login
 def home(request):
@@ -117,6 +123,48 @@ def schedule(request):
     semua_jadwal = Jadwal.objects.filter(user=request.user).order_by('waktu_mulai')
     return render(request, 'schedule.html', {'semua_jadwal': semua_jadwal})
 
+
+@login_required # Memastikan hanya user yang sudah login (seperti Ahmad) yang bisa chat
+def ai_chat(request):
+    # Ambil semua history chat milik user yang sedang aktif
+    history = ChatMessage.objects.filter(user=request.user).order_by('timestamp')
+    return render(request, 'ai_chat.html', {'history': history})
+
+@csrf_exempt
+@login_required
+def api_chat_response(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_message = data.get("message", "")
+            
+            # 1. Simpan pesan user ke database
+            ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
+            
+            # Setup API DeepSeek
+            api_url = "https://api.deepseek.com/chat/completions"
+            api_token = "sk-df07db4db82f4045ab245d78cf884cb8"
+            headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+            payload = {
+                "model": "deepseek-chat",
+                "messages": [{"role": "user", "content": user_message}],
+                "stream": False
+            }
+            
+            response = requests.post(api_url, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                ai_reply = response.json()["choices"][0]["message"]["content"]
+                
+                # 2. Simpan balasan AI ke database
+                ChatMessage.objects.create(user=request.user, sender='ai', message=ai_reply)
+                
+                return JsonResponse({"status": "success", "reply": ai_reply})
+            else:
+                return JsonResponse({"status": "error", "reply": "Server AI sedang sibuk."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "reply": str(e)})
+
 def profil(request):
 
     total_tugas = Jadwal.objects.filter(
@@ -147,9 +195,6 @@ def profil(request):
     }
 
     return render(request, 'profil.html', context)
-
-def ai_chat(request):
-    return render(request, 'ai_chat.html')
 
 def logout(request):
     auth_logout(request)

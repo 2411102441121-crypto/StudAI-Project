@@ -3,33 +3,44 @@
 
 {% block content %}
 <style>
-    /* Chat Container */
+    /* Chat Container - Diperbarui agar fit dengan tinggi layar browser */
     .chat-container {
         display: flex;
         flex-direction: column;
-        height: 75vh;
+        height: calc(100vh - 70px); /* Membatasi tinggi halaman agar tidak melebihi layar browser */
+        position: relative;
         background: transparent;
+        width: 100%;
     }
 
+    /* Area pesan chat yang bisa di-scroll - Diperbarui pembatas lebarnya */
     .chat-messages {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 10px;
+        flex: 1;
+        overflow-y: auto; /* Hanya area ini yang boleh memunculkan scrollbar */
+        padding: 15px;
+        margin-bottom: 110px; /* Ditambah sedikit ruang agar bubble chat paling bawah tidak tertutup form input */
         display: flex;
         flex-direction: column;
         gap: 15px;
         scrollbar-width: none;
+        
+        /* KUNCI GEMINI: Batasi lebar area isi chat dan bawa ke posisi tengah */
+        width: 100%;
+        max-width: 768px;
+        margin-left: auto;
+        margin-right: auto;
     }
     .chat-messages::-webkit-scrollbar { display: none; }
 
-    /* Bubble Chat Style */
+    /* Bubble Chat Style (Tetap Aman) */
     .bubble {
-        max-width: 80%;
+        max-width: 85%;
         padding: 12px 16px;
         border-radius: 20px;
         font-size: 14px;
         line-height: 1.5;
         position: relative;
+        word-wrap: break-word;
     }
 
     .bubble.ai {
@@ -38,6 +49,7 @@
         color: #333;
         border-bottom-left-radius: 2px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        width: 100%;
     }
 
     .bubble.user {
@@ -48,140 +60,117 @@
         box-shadow: 0 4px 15px rgba(0,0,64,0.2);
     }
 
-    /* Input Area Baru - Ala Gemini */
-    .chat-input-area {
-        background: white;
-        padding: 10px 15px;
-        border-radius: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-    .input-actions {
-        display: flex;
-        gap: 5px;
-    }
-
-    .btn-icon {
+    /* KUNCI GEMINI: Kontainer pembungkus luar area input (Melayang penuh secara horizontal) */
+    .chat-input-container {
+        position: fixed;
+        bottom: 85px; /* Jarak gantung aman di atas navbar menu utama bawah */
+        left: 0;
+        right: 0;
         background: transparent;
-        border: none;
-        color: #666;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.2s;
-        cursor: pointer;
+        padding: 0 24px; /* Celah tipis di ujung kiri & kanan layar browser */
+        z-index: 10;
+        pointer-events: none; /* Supaya background transparan tidak memblokir scroll/klik di belakangnya */
     }
 
-    .btn-icon:hover {
-        background-color: #f0f2f5;
-        color: #000066;
+    /* KUNCI GEMINI: Kotak Input Utama yang membatasi ukuran lebar (max-width disamakan dengan chat-messages) */
+    .chat-input-area {
+        max-width: 768px; /* Ukuran lebar proporsional persis layout Gemini */
+        margin: 0 auto; /* Otomatis membagi ruang kosong kiri kanan agar kotak di tengah */
+        background: #f0f4f9; /* Warna dasar abu-abu sangat muda ala Gemini */
+        padding: 8px 18px;
+        border-radius: 28px; /* Sudut melengkung kapsul sempurna */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 20px rgba(0,0,0,0.04);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        pointer-events: auto; /* Mengaktifkan kembali fungsi klik/ketik di dalam bungkusan */
+        border: 1px solid rgba(0, 0, 0, 0.02);
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    /* Efek interaktif saat kolom input teks diklik */
+    .chat-input-area:focus-within {
+        background: #ffffff; /* Berubah menjadi putih bersih */
+        box-shadow: 0 4px 18px rgba(0,0,0,0.08); /* Shadow halus naik ke atas */
     }
 
     .chat-input {
         border: none;
         flex-grow: 1;
         outline: none;
-        font-size: 14px;
+        font-size: 15px;
         background: transparent;
         padding: 8px 0;
+        color: #1f1f1f;
     }
 
     .btn-send {
-        background: #000066;
-        color: white;
-        width: 40px;
-        height: 40px;
+        background: transparent; 
+        color: #000066;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         border: none;
-        transition: 0.3s;
-    }
-    .btn-send:hover { transform: scale(1.1); }
-
-    /* Suggestion Chips */
-    .suggestion-chips {
-        display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        padding: 10px 0;
-        scrollbar-width: none;
-    }
-    .chip {
-        white-space: nowrap;
-        padding: 8px 15px;
-        background: #eef2ff;
-        border-radius: 20px;
-        font-size: 12px;
-        color: #000066;
+        transition: background-color 0.2s, transform 0.1s;
         cursor: pointer;
-        border: 1px solid #d0d7ff;
+    }
+    .btn-send:hover { 
+        background-color: rgba(0, 0, 102, 0.05);
+        transform: scale(1.05); 
     }
 
-    /* Typing & Upload Indicator */
+    /* Status Info (Typing/Thinking) di atas input */
     .status-info {
+        max-width: 768px;
+        margin: 0 auto 6px auto;
         font-size: 11px;
         color: #888;
-        margin-left: 15px;
         height: 15px;
+        padding-left: 10px;
+        pointer-events: auto;
     }
-
-    #fileInput { display: none; }
 </style>
 
-<div class="chat-header mt-3 mb-4">
-    <h4 class="fw-bold mb-0">StudAI Chat</h4>
-    <p class="text-muted small">Tanya soal atau atur jadwalmu di sini</p>
-</div>
-
 <div class="chat-container">
-    <!-- Messages Area -->
+    <div class="chat-header mt-3 mb-4 text-center">
+        <h4 class="fw-bold mb-0">StudAI Chat</h4>
+        <p class="text-muted small">Tanya soal di sini</p>
+    </div>
+
     <div class="chat-messages" id="chatMessages">
-        <div class="bubble ai shadow-sm">
-            Halo Ahmad! Ada tugas atau materi kuliah yang ingin dibahas? Upload file tugasmu atau kirim pesan suara juga bisa lho!
-        </div>
+        {% for chat in history %}
+            <div class="bubble {{ chat.sender }} shadow-sm">
+                {% if chat.sender == 'ai' %}
+                    <div class="markdown-rendered"></div>
+                    <textarea class="raw-markdown" style="display: none;">{{ chat.message }}</textarea>
+                {% else %}
+                    {{ chat.message }}
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="bubble ai shadow-sm">
+                Halo Ahmad! Ada tugas atau materi kuliah yang ingin dibahas? Upload file tugasmu atau kirim pesan suara juga bisa lho!
+            </div>
+        {% endfor %}
     </div>
 
-    <!-- Suggestion Chips -->
-    <div class="suggestion-chips">
-        <div class="chip" onclick="fillInput('Tolong rangkumkan materi ini...')">📝 Rangkum Materi</div>
-        <div class="chip" onclick="fillInput('Atur jadwal belajar AI untuk tugas...')">📅 Atur Jadwal AI</div>
-        <div class="chip" onclick="fillInput('Jelaskan konsep dasar...')">💡 Tanya Konsep</div>
-    </div>
+    <div class="chat-input-container">
+        <div class="status-info" id="statusInfo"></div>
 
-    <!-- Status Info (Typing/Uploading) -->
-    <div class="status-info" id="statusInfo"></div>
-
-    <!-- Input Area -->
-    <div class="chat-input-area">
-        <div class="input-actions">
-            <!-- File Upload -->
-            <input type="file" id="fileInput" onchange="handleFileUpload()">
-            <button class="btn-icon" title="Upload File" onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-paperclip"></i>
-            </button>
-            <!-- Voice Input -->
-            <button class="btn-icon" id="voiceBtn" title="Voice Input" onclick="toggleVoice()">
-                <i class="fas fa-microphone"></i>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="userInput" placeholder="Ketik pesan di sini...">
+            
+            <button class="btn-send" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
             </button>
         </div>
-
-        <input type="text" class="chat-input" id="userInput" placeholder="Ketik pesan Ahmad di sini...">
-        
-        <button class="btn-send" onclick="sendMessage()">
-            <i class="fas fa-paper-plane"></i>
-        </button>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
@@ -197,77 +186,74 @@
         if (message !== "") {
             addBubble(message, 'user');
             userInput.value = "";
-            showAiResponse("Siap Ahmad! Aku akan memproses permintaanmu.");
+            showAiResponse(message);
         }
     }
 
     function addBubble(text, sender) {
         const bubble = document.createElement('div');
         bubble.className = `bubble ${sender} shadow-sm`;
-        bubble.innerHTML = text;
+
+        if (sender === 'ai') {
+            bubble.innerHTML = marked.parse(text);
+        } else {
+            bubble.innerHTML = text;
+        }
+
         chatMessages.appendChild(bubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function showAiResponse(text) {
+    function showAiResponse(userMessage) {
         statusInfo.innerText = "StudAI sedang berpikir...";
-        setTimeout(() => {
-            statusInfo.innerText = "";
-            addBubble(text, 'ai');
-        }, 2000);
-    }
-
-    // Fitur Upload File (Simulasi)
-    function handleFileUpload() {
-        const file = document.getElementById('fileInput').files[0];
-        if (file) {
-            statusInfo.innerText = `Mengunggah ${file.name}...`;
-            setTimeout(() => {
-                statusInfo.innerText = "";
-                addBubble(`<i class="fas fa-file-alt me-2"></i> File terunggah: <b>${file.name}</b>`, 'user');
-                showAiResponse(`File <b>${file.name}</b> berhasil diterima! Apa yang harus aku lakukan dengan file ini?`);
-            }, 1500);
-        }
-    }
-
-    // Fitur Voice (Simulasi)
-    let isRecording = false;
-    function toggleVoice() {
-        const voiceBtn = document.getElementById('voiceBtn');
-        if (!isRecording) {
-            isRecording = true;
-            voiceBtn.style.color = "red";
-            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
-            statusInfo.innerText = "StudAI sedang mendengarkan...";
-        } else {
-            isRecording = false;
-            voiceBtn.style.color = "#666";
-            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-            statusInfo.innerText = "";
-            userInput.value = "Tolong jelaskan materi dari rekaman tadi.";
-            sendMessage();
-        }
-    }
-
-    // Fungsi untuk mengecek apakah ada pesan otomatis dari halaman lain
-window.onload = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const preset = urlParams.get('preset');
-
-    if (preset === 'atur_jadwal') {
-        // Otomatis mengisi input chat
-        const input = document.getElementById('userInput');
-        input.value = "Halo StudAI! Tolong bantu aku atur jadwal belajar untuk hari ini.";
         
-        // Memberikan efek fokus agar user tinggal lanjut mengetik
-        input.focus();
-
-        // (Opsional) Langsung kirim pesan jika Ahmad mau
-        // sendMessage(); 
+        fetch('/ai_chat/get_response/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: userMessage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            statusInfo.innerText = "";
+            if (data.status === "success") {
+                addBubble(data.reply, 'ai');
+            } else {
+                addBubble(data.reply, 'ai');
+            }
+        })
+        .catch(error => {
+            statusInfo.innerText = "";
+            addBubble("Waduh, koneksi ke server terputus nih.", "ai");
+            console.error('Error:', error);
+        });
     }
-}
 
-    // Tekan Enter untuk mengirim
+    window.onload = function() {
+        document.querySelectorAll('.bubble.ai').forEach(bubble => {
+            const rawTextarea = bubble.querySelector('.raw-markdown');
+            const renderContainer = bubble.querySelector('.markdown-rendered');
+            
+            if (rawTextarea && renderContainer) {
+                renderContainer.innerHTML = marked.parse(rawTextarea.value);
+            }
+        });
+        
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const preset = urlParams.get('preset');
+        if (preset === 'atur_jadwal') {
+            if (userInput) {
+                userInput.value = "Halo StudAI! Tolong bantu aku atur jadwal belajar untuk hari ini.";
+                userInput.focus();
+            }
+        }
+    }
+
     userInput.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             sendMessage();
