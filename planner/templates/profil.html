@@ -163,31 +163,6 @@
         font-size: 18px;
         font-weight: bold;
     }
-
-    .bottom-nav{
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        display: flex;
-        justify-content: space-around;
-        padding: 15px 0;
-        box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-        z-index: 999;
-    }
-
-    .bottom-nav a{
-        text-decoration: none;
-        color: gray;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .bottom-nav a.active{
-        color: #1c2f92;
-        font-weight: bold;
-    }
 </style>
 
 <div class="profile-container">
@@ -293,14 +268,6 @@
 
     </div>
 
-</div>
-
-<div class="bottom-nav">
-    <a href="{% url 'home' %}">HOME</a>
-    <a href="{% url 'schedule' %}">Schedule</a>
-    <a href="#">Materi</a>
-    <a href="#">Konsultasi</a>
-    <a href="{% url 'profil' %}" class="active">Profil</a>
 </div>
 
 {% endblock %}

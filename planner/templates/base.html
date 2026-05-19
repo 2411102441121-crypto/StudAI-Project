@@ -99,7 +99,7 @@
         <i class="fas fa-comment-dots"></i>
         <span>AI Chat</span>
     </a>
-    <a href="{% url 'profil' %}" class="active">
+    <a href="{% url 'profil' %}" class="nav-item {% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
         <i class="fa-regular fa-circle-user"></i>
         <span>Profil</span>
     </a>

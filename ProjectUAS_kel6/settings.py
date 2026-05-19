@@ -157,5 +157,10 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# Tambahkan ini agar tidak muncul halaman konfirmasi "Lanjutkan"
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Di dalam settings.py
+LOGIN_URL = '/login/'  # Sesuaikan dengan 'name' pada path login di urls.py kamu
 LOGIN_REDIRECT_URL = 'home'
-ACCOUNT_LOGOUT_REDIRECT_URL = 'login' # Opsional: arahkan ke login setelah logout
+ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # Opsional: arahkan ke login setelah logout

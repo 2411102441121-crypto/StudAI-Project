@@ -6,11 +6,11 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    path('login/', views.login, name='login'),
     # WAJIB: Tambahkan ini agar Google Login Allauth berfungsi
     path('accounts/', include('allauth.urls')), 
 
     # Rute aplikasi StudAI Anda
-    path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
     path('home/', views.home, name='home'),
     path('tambah_jadwal/', views.tambah_jadwal, name='tambah_jadwal'),

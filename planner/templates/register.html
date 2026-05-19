@@ -1,24 +1,152 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - StudAI</title>
-    </head>
-<body>
-    <div class="login-container">
-        <img src="{% static 'planner/rocket_logo.png' %}" alt="Logo" class="logo">
-        <h1 class="app-name">StudAI</h1>
-        <p class="slogan">Join our AI-Powered Learning Community</p>
 
-        <form method="post" class="django-form">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:'Poppins',sans-serif;
+            background:#F5F5F5;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+        }
+
+        .register-container{
+            width:400px;
+            background:white;
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+            text-align:center;
+        }
+
+        .logo{
+            width:100px;
+            margin-bottom:15px;
+        }
+
+        .app-name{
+            font-size:42px;
+            font-weight:700;
+            color:#111A63;
+            margin-bottom:10px;
+        }
+
+        .slogan{
+            font-size:14px;
+            color:#555;
+            margin-bottom:30px;
+        }
+
+        .form-group{
+            margin-bottom:15px;
+        }
+
+        .form-group input{
+            width:100%;
+            padding:15px 20px;
+            border:none;
+            border-radius:30px;
+            background:#E5E5E5;
+            font-size:15px;
+            outline:none;
+        }
+
+        .btn-register{
+            width:100%;
+            padding:15px;
+            border:none;
+            border-radius:30px;
+            background:#111A63;
+            color:white;
+            font-size:20px;
+            font-weight:600;
+            cursor:pointer;
+            margin-top:10px;
+        }
+
+        .btn-register:hover{
+            opacity:0.9;
+        }
+
+        .login-text{
+            margin-top:25px;
+            font-size:14px;
+            color:#777;
+        }
+
+        .login-text a{
+            color:black;
+            font-weight:700;
+            text-decoration:none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="register-container">
+
+        <img src="{% static 'planner/rocket_logo.png' %}" class="logo">
+
+        <h1 class="app-name">StudAI</h1>
+
+        <p class="slogan">
+            Join our AI-Powered Learning Community
+        </p>
+
+        <form method="POST">
             {% csrf_token %}
-            {{ form.as_p }} <button type="submit" class="btn-login">Register</button>
+
+            <div class="form-group">
+                <input type="text"
+                       name="username"
+                       placeholder="Username"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <input type="password"
+                       name="password1"
+                       placeholder="Password"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <input type="password"
+                       name="password2"
+                       placeholder="Confirm Password"
+                       required>
+            </div>
+
+            <button type="submit" class="btn-register">
+                Register
+            </button>
+
         </form>
 
-        <p class="register-text">
-            Already have an account? <a href="{% url 'login' %}" class="register-link">Login Here</a>
+        <p class="login-text">
+            Already have an account?
+            <a href="{% url 'login' %}">
+                Login Here
+            </a>
         </p>
+
     </div>
+
 </body>
 </html>
