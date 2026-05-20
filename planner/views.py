@@ -13,7 +13,7 @@ from .models import ChatMessage
 import requests
 import json
 
-@login_required # Home hanya bisa dibuka jika sudah login
+@login_required
 def home(request):
     if request.method == 'POST':
         form = JadwalForm(request.POST)
@@ -25,13 +25,16 @@ def home(request):
     else:
         form = JadwalForm()
 
-    # Ambil jadwal mulai dari hari ini ke depan (Mendatang)
-    from datetime import date
-    jadwal_terdekat = Jadwal.objects.filter(tanggal__gte=date.today()).order_by('tanggal', 'waktu_mulai')[:3]
+    # Perbaikan urutan: urutkan berdasarkan tanggal, lalu jam_deadline agar sinkron
+    jadwal_terdekat = Jadwal.objects.filter(
+        user=request.user, 
+        tanggal__gte=date.today()
+    ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')[:3]
     
     return render(request, 'home.html', {
         'form': form, 
-        'jadwal_terdekat': jadwal_terdekat
+        'jadwal_terdekat': jadwal_terdekat,
+        'nama_user': request.user.username # Agar nama di Halo, {{ nama_user }} muncul
     })
 
 def login(request):

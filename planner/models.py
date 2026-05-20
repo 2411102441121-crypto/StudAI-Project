@@ -11,16 +11,16 @@ class Materi(models.Model):
         return self.nama_matkul
     
 class Jadwal(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True) # Relasi ke User
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     TIPE_CHOICES = [
         ('tugas', 'Tugas'),
         ('belajar', 'Kegiatan Belajar'),
     ]
     tipe = models.CharField(max_length=20, choices=TIPE_CHOICES, default='tugas')
     kegiatan = models.CharField(max_length=255)
-    waktu_mulai = models.TimeField(null=True, blank=True) # Null untuk Tugas
-    waktu_selesai = models.TimeField(null=True, blank=True) # Null untuk Tugas
-    jam_deadline = models.TimeField(null=True, blank=True) # Hanya untuk Tugas
+    waktu_mulai = models.TimeField(null=True, blank=True)
+    waktu_selesai = models.TimeField(null=True, blank=True)
+    jam_deadline = models.TimeField(null=True, blank=True)
     tanggal = models.DateField()
 
     def __str__(self):
