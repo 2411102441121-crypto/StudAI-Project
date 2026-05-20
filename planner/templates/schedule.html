@@ -117,14 +117,25 @@
         </div>
     </div>
     
-    <div class="date-picker-container">
-        <div class="date-item"> <span class="day-name">Sen</span> <span class="day-number">27</span> </div>
-        <div class="date-item active"> <span class="day-name">Sel</span> <span class="day-number">28</span> </div>
-        <div class="date-item"> <span class="day-name">Rab</span> <span class="day-number">29</span> </div>
-        <div class="date-item"> <span class="day-name">Kam</span> <span class="day-number">30</span> </div>
-        <div class="date-item"> <span class="day-name">Jum</span> <span class="day-number">01</span> </div>
-        <div class="date-item"> <span class="day-name">Sab</span> <span class="day-number">02</span> </div>
+<div class="date-picker-container">
+
+    {% for day in days %}
+
+    <div class="date-item {% if day.full_date == today %}active{% endif %}">
+
+        <span class="day-name">
+            {{ day.nama_hari }}
+        </span>
+
+        <span class="day-number">
+            {{ day.tanggal }}
+        </span>
+
     </div>
+
+    {% endfor %}
+
+</div>
 
     <h5 class="fw-bold mt-4">Timeline View</h5>
 
