@@ -1,14 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Jadwal
+from .models import Jadwal, ChatMessage
 from .forms import JadwalForm
-from datetime import date
+
+from datetime import date, datetime, timedelta
+
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.decorators import login_required # Tambahkan ini agar aman
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import ChatMessage
 
 import requests
 import json
@@ -122,9 +124,39 @@ def hapus_jadwal(request, id):
     return redirect('home')
 
 def schedule(request):
-    # Urutkan berdasarkan waktu mulai agar timeline urut dari pagi ke malam
-    semua_jadwal = Jadwal.objects.filter(user=request.user).order_by('waktu_mulai')
-    return render(request, 'schedule.html', {'semua_jadwal': semua_jadwal})
+
+    # Ambil tanggal hari ini
+    today = date.today()
+
+    # Nama hari Indonesia
+    nama_hari = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+
+    # Buat tanggal otomatis 6 hari ke depan
+    days = []
+
+    for i in range(6):
+        current_day = today + timedelta(days=i)
+
+        days.append({
+            'nama_hari': nama_hari[current_day.weekday()],
+            'tanggal': current_day.day,
+            'bulan': current_day.month,
+            'tahun': current_day.year,
+            'full_date': current_day
+        })
+
+    # Ambil jadwal user dan urutkan
+    semua_jadwal = Jadwal.objects.filter(
+        user=request.user
+    ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')
+
+    context = {
+        'days': days,
+        'today': today,
+        'semua_jadwal': semua_jadwal
+    }
+
+    return render(request, 'schedule.html', context)
 
 
 @login_required # Memastikan hanya user yang sudah login (seperti Ahmad) yang bisa chat
