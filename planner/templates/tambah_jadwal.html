@@ -20,74 +20,74 @@
     <div class="card-form">
         <h4 class="mb-4">Tambah Rencana Baru</h4>
         <form method="POST">
-    {% csrf_token %}
-    
-    <div class="mb-3">
-        <label class="form-label">Tipe Rencana</label>
-        <select name="tipe" class="form-select" id="tipeSelect" onchange="toggleForm()">
-            <option value="tugas">Tugas</option>
-            <option value="belajar">Kegiatan Belajar</option>
-        </select>
-    </div>
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Tipe Rencana</label>
+                <select name="tipe" class="form-select" id="tipeSelect" onchange="toggleForm()">
+                    <option value="tugas">Tugas</option>
+                    <option value="belajar">Kegiatan Belajar</option>
+                </select>
+            </div>
 
-    <div class="mb-3">
-        <label class="form-label" id="labelNama">Nama Tugas</label>
-        <input type="text" name="kegiatan" id="inputKegiatan" class="form-control" placeholder="Contoh: Tugas RPL-Tugas 7" required>
-    </div>
+            <div class="mb-3">
+                <label class="form-label" id="labelNama">Nama Tugas</label>
+                <input type="text" name="kegiatan" id="inputKegiatan" class="form-control" placeholder="Contoh: Tugas RPL-Tugas 7" required>
+            </div>
 
-    <div id="wrapperWaktu" style="display: none;">
-    <div class="row">
-        <div class="col-6 mb-3" id="colMulai">
-            <label class="form-label" id="labelWaktuMulai">Waktu Mulai</label>
-            <input type="time" name="waktu_mulai" id="inputWaktuMulai" class="form-control">
-        </div>
-        <div class="col-6 mb-3" id="colSelesai">
-            <label class="form-label">Waktu Selesai</label>
-            <input type="time" name="waktu_selesai" class="form-control">
-        </div>
-    </div>
-</div>
+            <div class="mb-3" id="wrapperDeadline">
+                <label class="form-label">Jam Deadline</label>
+                <input type="time" name="jam_deadline" class="form-control">
+            </div>
 
-    <div class="mb-4">
-        <label class="form-label" id="labelTanggal">Deadline</label>
-        <input type="date" name="tanggal" class="form-control" required>
-    </div>
+            <div id="wrapperBelajar" style="display: none;">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Waktu Mulai</label>
+                        <input type="time" name="waktu_mulai" class="form-control">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">Waktu Selesai</label>
+                        <input type="time" name="waktu_selesai" class="form-control">
+                    </div>
+                </div>
+            </div>
 
-    <button type="submit" class="btn-save shadow">Simpan ke Jadwal</button>
-</form>
+            <div class="mb-4">
+                <label class="form-label" id="labelTanggal">Tanggal Deadline</label>
+                <input type="date" name="tanggal" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn-save shadow">Simpan ke Jadwal</button>
+        </form>
+    </div>
 
 <script>
     function toggleForm() {
-    const tipe = document.getElementById('tipeSelect').value;
-    const wrapperWaktu = document.getElementById('wrapperWaktu');
-    const labelNama = document.getElementById('labelNama');
-    const labelTanggal = document.getElementById('labelTanggal');
-    const inputKegiatan = document.getElementById('inputKegiatan');
-    const labelWaktuMulai = document.getElementById('labelWaktuMulai'); // Tambahkan ID ini di label Waktu Mulai
-    const inputWaktuMulai = document.getElementById('inputWaktuMulai'); // Tambahkan ID ini di input Waktu Mulai
+        const tipe = document.getElementById('tipeSelect').value;
+        const wrapperDeadline = document.getElementById('wrapperDeadline');
+        const wrapperBelajar = document.getElementById('wrapperBelajar');
+        const labelNama = document.getElementById('labelNama');
+        const labelTanggal = document.getElementById('labelTanggal');
+        const inputKegiatan = document.getElementById('inputKegiatan');
 
-    if (tipe === 'tugas') {
-        // Tampilkan hanya satu input jam untuk Deadline
-        wrapperWaktu.style.display = 'block'; 
-        document.getElementById('colSelesai').style.display = 'none'; // Sembunyikan Waktu Selesai
-        
-        labelNama.innerText = 'Nama Tugas';
-        labelTanggal.innerText = 'Tanggal Deadline';
-        labelWaktuMulai.innerText = 'Jam Deadline';
-        inputKegiatan.placeholder = 'Contoh: Laporan Jaringan Komputer';
-    } else {
-        // Tampilkan semua untuk Kegiatan Belajar
-        wrapperWaktu.style.display = 'block';
-        document.getElementById('colSelesai').style.display = 'block';
-        
-        labelNama.innerText = 'Nama Kegiatan Belajar';
-        labelTanggal.innerText = 'Tanggal Belajar';
-        labelWaktuMulai.innerText = 'Waktu Mulai';
-        inputKegiatan.placeholder = 'Contoh: Belajar Pemrograman Web Lanjut';
+        if (tipe === 'tugas') {
+            wrapperDeadline.style.display = 'block';
+            wrapperBelajar.style.display = 'none';
+            
+            labelNama.innerText = 'Nama Tugas';
+            labelTanggal.innerText = 'Tanggal Deadline';
+            inputKegiatan.placeholder = 'Contoh: Laporan Jaringan Komputer';
+        } else {
+            wrapperDeadline.style.display = 'none';
+            wrapperBelajar.style.display = 'block';
+            
+            labelNama.innerText = 'Nama Kegiatan Belajar';
+            labelTanggal.innerText = 'Tanggal Belajar';
+            inputKegiatan.placeholder = 'Contoh: Belajar Pemrograman Web Lanjut';
+        }
     }
-}
 
-    // Pastikan fungsi jalan saat halaman dibuka pertama kali
     window.onload = toggleForm;
 </script>
 </body>
