@@ -17,6 +17,9 @@ import json
 
 @login_required
 def home(request):
+    today = date.today()
+    
+    # --- LOGIKA UNTUK FORM TAMBAH JADWAL (Dari kode lama kamu) ---
     if request.method == 'POST':
         form = JadwalForm(request.POST)
         if form.is_valid():
@@ -27,17 +30,34 @@ def home(request):
     else:
         form = JadwalForm()
 
-    # Perbaikan urutan: urutkan berdasarkan tanggal, lalu jam_deadline agar sinkron
+    # --- LOGIKA UNTUK PROGRESS BAR (Dinamis) ---
+    # 1. Ambil jadwal khusus hari ini saja untuk dihitung progressnya
+    jadwal_hari_ini = Jadwal.objects.filter(user=request.user, tanggal=today)
+    total_tugas = jadwal_hari_ini.count()
+    tugas_selesai = jadwal_hari_ini.filter(is_selesai=True).count()
+    
+    # 2. Hitung persentase tugas selesai
+    if total_tugas > 0:
+        persentase = int((tugas_selesai / total_tugas) * 100)
+    else:
+        persentase = 0 
+        
+    # --- LOGIKA UNTUK LIST JADWAL TERDEKAT ---
+    # 3. Ambil 5 jadwal mendatang untuk ditampilkan di halaman home
     jadwal_terdekat = Jadwal.objects.filter(
         user=request.user, 
-        tanggal__gte=date.today()
-    ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')[:3]
-    
-    return render(request, 'home.html', {
-        'form': form, 
+        tanggal__gte=today
+    ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')[:5]
+
+    # Kirim semua data ke home.html
+    context = {
+        'form': form,
+        'nama_user': request.user.username,
         'jadwal_terdekat': jadwal_terdekat,
-        'nama_user': request.user.username # Agar nama di Halo, {{ nama_user }} muncul
-    })
+        'persentase': persentase,
+        'today': today,
+    }
+    return render(request, 'home.html', context)
 
 def login(request):
     if request.method == 'POST':
@@ -123,41 +143,43 @@ def hapus_jadwal(request, id):
         return redirect('home')
     return redirect('home')
 
+@login_required
 def schedule(request):
-
-    # Ambil tanggal hari ini
+    # Gunakan date.today() sekali saja agar konsisten
     today = date.today()
-
-    # Nama hari Indonesia
-    nama_hari = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
-
-    # Buat tanggal otomatis 6 hari ke depan
+    
+    # 1. Membuat Slider Tanggal (2 hari lalu s/d 3 hari ke depan)
+    # Kita buat list nama hari secara statis agar tidak membebani server
+    nama_hari_indo = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
     days = []
-
-    for i in range(6):
-        current_day = today + timedelta(days=i)
-
+    
+    for i in range(-2, 4):
+        target_date = today + timedelta(days=i)
         days.append({
-            'nama_hari': nama_hari[current_day.weekday()],
-            'tanggal': current_day.day,
-            'bulan': current_day.month,
-            'tahun': current_day.year,
-            'full_date': current_day
+            'nama_hari': nama_hari_indo[target_date.weekday()],
+            'tanggal': target_date.day,
+            'full_date': target_date,
         })
 
-    # Ambil jadwal user dan urutkan
+    # 2. Ambil data (Optimasi dengan .only() jika perlu, tapi filter ini standarnya cepat)
+    # Menampilkan tugas hari ini dan seterusnya (semua tugas mendatang)
     semua_jadwal = Jadwal.objects.filter(
-        user=request.user
-    ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')
+        user=request.user,
+        tanggal__gte=today
+    ).order_by('tanggal', 'waktu_mulai', 'jam_deadline')
 
-    context = {
+    return render(request, 'schedule.html', {
         'days': days,
         'today': today,
-        'semua_jadwal': semua_jadwal
-    }
+        'semua_jadwal': semua_jadwal,
+    })
 
-    return render(request, 'schedule.html', context)
-
+@login_required
+def toggle_selesai(request, jadwal_id):
+    jadwal = Jadwal.objects.get(id=jadwal_id, user=request.user)
+    jadwal.is_selesai = not jadwal.is_selesai # Balikkan status (True jadi False, dsb)
+    jadwal.save()
+    return redirect('schedule')
 
 @login_required # Memastikan hanya user yang sudah login (seperti Ahmad) yang bisa chat
 def ai_chat(request):
