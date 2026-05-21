@@ -7,6 +7,7 @@
         --primary-dark: #000066;
         --bg-light: #f8faff;
         --danger: #dc3545;
+        --success: #28a745;
     }
 
     body { background-color: var(--bg-light); font-family: 'Poppins', sans-serif; }
@@ -55,21 +56,45 @@
         z-index: 1;
     }
 
-    .timeline-event { display: flex; margin-bottom: 25px; position: relative; z-index: 2; }
+    .timeline-event { display: flex; align-items: center; margin-bottom: 25px; position: relative; z-index: 2; }
 
     .time-label {
         width: 50px;
         font-size: 12px;
         font-weight: 600;
         color: #888;
-        padding-top: 10px;
         text-align: right;
+    }
+
+    /* Checkbox Button Custom */
+    .btn-check-task {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ddd;
+        background: white;
+        color: transparent;
+        transition: 0.3s;
+        margin-left: 15px;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .btn-check-task:hover { border-color: var(--success); color: #ddd; }
+
+    .btn-check-task.completed {
+        background: var(--success);
+        border-color: var(--success);
+        color: white;
     }
 
     /* Card Schedule */
     .card-schedule {
         flex-grow: 1;
-        margin-left: 30px;
+        margin-left: 15px;
         border: none;
         border-radius: 20px;
         background: white;
@@ -78,9 +103,12 @@
         transition: 0.3s;
     }
     
+    .card-schedule.is-completed { opacity: 0.7; background: #f9f9f9; }
     .card-schedule:hover { transform: translateX(5px); }
     .border-tugas { border-left-color: #ff4d4d; }
     .border-belajar { border-left-color: #4d79ff; }
+
+    .task-text-completed { text-decoration: line-through; color: #aaa; }
 
     /* Action Buttons */
     .btn-action {
@@ -109,7 +137,7 @@
     <div class="d-flex align-items-center text-muted small mt-2">
         <div class="d-flex align-items-center me-3">
             <i class="far fa-calendar-alt me-2 text-primary"></i>
-            <span>{% now "j M Y" %}</span>
+            <span>{{ today|date:"j M Y" }}</span>
         </div>
         <div class="d-flex align-items-center" style="border-left: 1px solid #ddd; padding-left: 15px;">
             <i class="far fa-clock me-2 text-primary"></i>
@@ -117,25 +145,14 @@
         </div>
     </div>
     
-<div class="date-picker-container">
-
-    {% for day in days %}
-
-    <div class="date-item {% if day.full_date == today %}active{% endif %}">
-
-        <span class="day-name">
-            {{ day.nama_hari }}
-        </span>
-
-        <span class="day-number">
-            {{ day.tanggal }}
-        </span>
-
+    <div class="date-picker-container">
+        {% for day in days %}
+        <div class="date-item {% if day.full_date == today %}active{% endif %}">
+            <span class="day-name">{{ day.nama_hari }}</span>
+            <span class="day-number">{{ day.tanggal }}</span>
+        </div>
+        {% endfor %}
     </div>
-
-    {% endfor %}
-
-</div>
 
     <h5 class="fw-bold mt-4">Timeline View</h5>
 
@@ -152,17 +169,21 @@
                 {% endif %}
             </div>
 
-            <div class="card card-schedule shadow-sm {% if j.tipe == 'tugas' %}border-tugas{% else %}border-belajar{% endif %}">
+            <a href="{% url 'toggle_selesai' j.id %}" class="btn-check-task {% if j.is_selesai %}completed{% endif %}" title="Tandai Selesai">
+                <i class="fas fa-check"></i>
+            </a>
+
+            <div class="card card-schedule shadow-sm {% if j.tipe == 'tugas' %}border-tugas{% else %}border-belajar{% endif %} {% if j.is_selesai %}is-completed{% endif %}">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="fw-bold mb-1">{{ j.kegiatan }}</h6>
+                            <h6 class="fw-bold mb-1 {% if j.is_selesai %}task-text-completed{% endif %}">{{ j.kegiatan }}</h6>
                             
                             <p class="text-muted small mb-0">
                                 <i class="fas fa-calendar-alt me-1"></i> {{ j.tanggal|date:"j M Y" }} | 
                                 <i class="fas fa-clock me-1"></i> 
                                 {% if j.tipe == 'tugas' %}
-                                    Deadline: {% if j.jam_deadline %}{{ j.jam_deadline|time:"H:i" }}{% else %}Isi Jam via Edit{% endif %}
+                                    Deadline: {{ j.jam_deadline|time:"H:i" }}
                                 {% else %}
                                     {{ j.waktu_mulai|time:"H:i" }} - {{ j.waktu_selesai|time:"H:i" }}
                                 {% endif %}
@@ -184,7 +205,7 @@
         {% empty %}
         <div class="text-center py-5">
             <i class="fas fa-calendar-times opacity-25" style="font-size: 50px;"></i>
-            <p class="text-muted mt-3">Tidak ada jadwal untuk hari ini.</p>
+            <p class="text-muted mt-3">Tidak ada jadwal tersimpan.</p>
         </div>
         {% endfor %}
     </div>
@@ -212,7 +233,6 @@
 <script>
     function confirmDelete(id, name) {
         document.getElementById('delJadwalName').innerText = name;
-        // Gunakan URL hapus_jadwal sesuai dengan views.py
         document.getElementById('deleteForm').action = "/hapus_jadwal/" + id + "/";
         var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         myModal.show();

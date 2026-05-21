@@ -15,6 +15,7 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('tambah_jadwal/', views.tambah_jadwal, name='tambah_jadwal'),
     path('schedule/', views.schedule, name='schedule'),
+    path('toggle-selesai/<int:jadwal_id>/', views.toggle_selesai, name='toggle_selesai'),
     path('edit_jadwal/<int:pk>/', views.edit_jadwal, name='edit_jadwal'),
     path('hapus_jadwal/<int:id>/', views.hapus_jadwal, name='hapus_jadwal'),
     path('ai_chat/', views.ai_chat, name='ai_chat'), # Ini halaman chat utama kamu

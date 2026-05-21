@@ -22,6 +22,7 @@ class Jadwal(models.Model):
     waktu_selesai = models.TimeField(null=True, blank=True)
     jam_deadline = models.TimeField(null=True, blank=True)
     tanggal = models.DateField()
+    is_selesai = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.kegiatan} ({self.tipe})"
