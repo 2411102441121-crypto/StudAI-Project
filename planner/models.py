@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User # Menghubungkan chat dengan user yang login
+from django.contrib.auth import logout
 from django.conf import settings
 
 # Model untuk daftar matakuliah/materi
@@ -39,3 +40,23 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.sender}: {self.message[:20]}"
+    
+class Folder(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    nama = models.CharField(max_length=255)
+    semester = models.CharField(max_length=20, default='Semester 3')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nama
+
+class Modul(models.Model):
+    folder = models.ForeignKey(Folder, on_delete=models.CASCADE, related_name='files')
+    judul = models.CharField(max_length=255)
+    isi_file = models.FileField(upload_to='modul_files/') # Jika ingin upload file
+    # Atau jika ingin isi teks saja:
+    # konten = models.TextField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.judul

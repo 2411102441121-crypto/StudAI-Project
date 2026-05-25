@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        color: #000066;
+        text-decoration: none;
+    }
+    .upload-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: #ffffff;
+    }
+    .file-item {
+        border-radius: 15px;
+        background: white;
+        transition: 0.3s;
+        border: 1px solid #f1f1f1;
+    }
+    .icon-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000066; /* Warna toska sesuai referensi FAB */
+    }
+</style>
+
+<div class="container mt-3">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'book_main' %}" class="back-btn me-3">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h4 class="fw-bold mb-0" style="color: #000066;">{{ folder.nama }}</h4>
+    </div>
+
+    <div class="card upload-card p-4 mb-4">
+        <h6 class="fw-bold mb-3"><i class="fas fa-file-upload me-2"></i>Upload Modul Baru</h6>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="text" name="judul" class="form-control border-0 bg-light py-2" placeholder="Nama mata kuliah atau materi" required style="border-radius: 10px;">
+            </div>
+            <div class="mb-3">
+                <input type="file" name="file_modul" class="form-control border-0 bg-light py-2" required style="border-radius: 10px;">
+            </div>
+            <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="border-radius: 12px; background: #000066;">
+                Simpan Modul
+            </button>
+        </form>
+    </div>
+
+    <h6 class="fw-bold mb-3">Isi Folder</h6>
+    <div class="row g-2">
+        {% for modul in moduls %}
+        <div class="col-12">
+            <div class="file-item p-3 d-flex align-items-center">
+                <div class="icon-circle me-3">
+                    <i class="fas fa-file-pdf fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 fw-bold" style="font-size: 14px;">{{ modul.judul }}</h6>
+                    <small class="text-muted" style="font-size: 11px;">{{ modul.uploaded_at|date:"d M Y" }}</small>
+                </div>
+                <a href="{{ modul.isi_file.url }}" class="btn btn-sm btn-light rounded-pill px-3 fw-bold" target="_blank" style="font-size: 12px; color: #000066;">
+                    Buka
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-folder-open fa-3x text-light mb-2"></i>
+            <p class="text-muted small">Folder ini masih kosong.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

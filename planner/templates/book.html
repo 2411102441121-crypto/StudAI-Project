@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .search-bar {
+        background: #f1f3f5;
+        border-radius: 50px;
+        padding: 10px 20px;
+        border: none;
+    }
+    .filter-tab {
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+    .btn-filter {
+        border-radius: 20px;
+        margin-right: 5px;
+        font-size: 12px;
+        padding: 5px 15px;
+        border: 1px solid #000066;
+        color: #000066;
+    }
+    .btn-filter.active {
+        background: #000066;
+        color: white;
+    }
+    .module-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: 0.3s;
+    }
+    .module-card:hover { transform: translateY(-5px); }
+    .module-img {
+        height: 100px;
+        background: #e9ecef;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    /* Floating Action Button */
+    .fab-add {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #000066; /* Warna Toska seperti referensi */
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        border: none;
+        z-index: 1000;
+    }
+</style>
+
+<div class="container mt-3">
+    <h4 class="fw-bold mb-3">Modul Saya</h4>
+    
+    <div class="mb-3">
+        <div class="input-group search-bar">
+            <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" class="form-control bg-transparent border-0" placeholder="Cari mata kuliah atau materi...">
+        </div>
+    </div>
+
+<div class="filter-tab d-flex mb-3">
+    <a href="?semester=Semester 3" class="btn btn-filter {% if semester_aktif == 'Semester 3' %}active{% endif %}">Semester 3</a>
+    <a href="?semester=Semester 4" class="btn btn-filter {% if semester_aktif == 'Semester 4' %}active{% endif %}">Semester 4</a>
+    <a href="?semester=Semester 5" class="btn btn-filter {% if semester_aktif == 'Semester 5' %}active{% endif %}">Semester 5</a>
+    <a href="?semester=Arsip" class="btn btn-filter {% if semester_aktif == 'Arsip' %}active{% endif %}">Arsip</a>
+</div>
+
+    <div class="row g-3 mt-2">
+        {% for folder in folders %}
+        <div class="col-6">
+            <div class="card module-card p-2">
+                <a href="{% url 'detail_folder' folder.id %}" class="text-decoration-none text-dark">
+                    <div class="module-img">
+                        <i class="fas fa-microchip fa-2x text-secondary"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0" style="font-size: 14px;">{{ folder.nama }}</h6>
+                    <small class="text-muted" style="font-size: 11px;">{{ folder.files.count }} Materi PDF</small>
+                </a>
+                <div class="d-flex justify-content-end mt-1">
+                    <form action="{% url 'hapus_folder' folder.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn text-danger btn-sm p-0" onclick="return confirm('Hapus folder?')">
+                            <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">Klik tombol + untuk menambah folder baru</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<button class="fab-add" data-bs-toggle="modal" data-bs-target="#addFolderModal">
+    <i class="fas fa-plus"></i>
+</button>
+
+<div class="modal fade" id="addFolderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Tambah Folder Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="text" name="nama_folder" class="form-control border-0 bg-light" placeholder="Nama Mata Kuliah" required style="border-radius: 12px; padding: 12px;">
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary w-100 py-2" style="border-radius: 12px; background: #000066;">Buat Folder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
