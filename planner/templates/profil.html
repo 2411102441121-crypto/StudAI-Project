@@ -4,269 +4,251 @@
 {% block content %}
 
 <style>
+
     body{
         background: #f3f4f7;
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Poppins', sans-serif;
     }
 
     .profile-container{
         max-width: 430px;
         margin: 20px auto 90px;
-        background: white;
-        border-radius: 30px;
-        padding: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        position: relative;
-        overflow: hidden;
+        padding: 10px;
     }
 
     .title{
         text-align: center;
-        font-size: 28px;
+        font-size: 32px;
         font-weight: bold;
-        color: #1d2357;
-        margin-bottom: 20px;
+        color: #1b1f4b;
+        margin-bottom: 30px;
     }
+
+    /* =========================
+       PROFILE HEADER
+    ========================== */
 
     .profile-header{
         text-align: center;
+        margin-bottom: 30px;
     }
 
-    .profile-header img{
-        width: 110px;
-        height: 110px;
+    .profile-avatar{
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
-        object-fit: cover;
-        border: 5px solid #4e5bf2;
+        background: linear-gradient(135deg,#4e5bf2,#1c2f92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 50px;
+        font-weight: bold;
+        margin: auto;
+        border: 6px solid #dfe4ff;
+        box-shadow: 0 8px 20px rgba(78,91,242,0.3);
     }
 
     .profile-header h2{
-        margin-top: 15px;
+        margin-top: 18px;
         margin-bottom: 5px;
-        color: #1b1f4b;
         font-size: 30px;
+        color: #1b1f4b;
+        font-weight: bold;
     }
 
     .profile-header p{
-        color: gray;
-        margin-bottom: 20px;
+        color: #888;
+        margin-bottom: 0;
     }
 
-    .stats-card{
-        background: linear-gradient(135deg, #1c2f92, #273cb3);
-        border-radius: 25px;
-        padding: 20px;
-        color: white;
-        margin-bottom: 20px;
+    /* =========================
+       PROGRESS
+    ========================== */
+
+    .progress-wrapper{
+        background: #eef2ff;
+        padding: 18px;
+        border-radius: 20px;
+        margin-bottom: 25px;
     }
 
-    .stats-card h3{
-        margin-bottom: 15px;
+    .progress-top{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .progress-top h5{
+        margin: 0;
+        color: #1b1f4b;
+        font-weight: 600;
+    }
+
+    .progress-top span{
+        font-weight: bold;
+        color: #1b1f4b;
         font-size: 20px;
     }
 
-    .chart{
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        height: 140px;
-        margin-top: 10px;
+    .progress{
+        height: 16px;
+        border-radius: 20px;
+        background: #d9defd;
+        overflow: hidden;
     }
 
-    .bar{
-        width: 35px;
-        background: white;
-        border-radius: 10px 10px 0 0;
-        position: relative;
+    .progress-bar{
+        height: 100%;
+        border-radius: 20px;
+        background: linear-gradient(90deg,#4e5bf2,#19d3c5);
+        transition: 0.4s ease;
     }
 
-    .bar.active{
-        background: #19d3c5;
-    }
-
-    .bar span{
-        position: absolute;
-        bottom: -28px;
-        width: 100%;
-        text-align: center;
-        color: white;
-        font-size: 14px;
-    }
+    /* =========================
+       SUMMARY
+    ========================== */
 
     .summary{
         display: flex;
         gap: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
     .summary-box{
         flex: 1;
         background: white;
-        border-radius: 18px;
-        padding: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-radius: 22px;
+        padding: 20px;
         text-align: center;
-    }
-
-    .summary-box h4{
-        color: #1c2f92;
-        font-size: 26px;
-        margin: 5px 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
     }
 
     .summary-box p{
-        color: gray;
-        font-size: 14px;
+        color: #888;
+        margin-bottom: 10px;
+        font-size: 15px;
     }
 
-    .menu-list{
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    .summary-box h3{
+        font-size: 40px;
+        color: #1c2f92;
+        margin: 0;
+        font-weight: bold;
     }
 
-    .menu-item{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 18px 20px;
-        border-bottom: 1px solid #eee;
+    /* =========================
+       LOGOUT BUTTON
+    ========================== */
+
+    .logout-btn{
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 18px;
+        background: linear-gradient(135deg,#ff4d4d,#dc3545);
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
         text-decoration: none;
-        color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 8px 20px rgba(220,53,69,0.2);
         transition: 0.3s;
     }
 
-    .menu-item:hover{
-        background: #f5f7ff;
+    .logout-btn:hover{
+        transform: translateY(-3px);
+        color: white;
     }
 
-    .menu-item:last-child{
-        border-bottom: none;
-    }
-
-    .menu-left{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .menu-icon{
-        width: 38px;
-        height: 38px;
-        background: #eef1ff;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #1c2f92;
-        font-size: 18px;
-        font-weight: bold;
-    }
 </style>
 
 <div class="profile-container">
 
+    <!-- TITLE -->
     <div class="title">
         Evaluasi Belajar & Profil
     </div>
 
+    <!-- PROFILE -->
     <div class="profile-header">
-        <img src="https://i.pravatar.cc/300" alt="profile">
-        <h2>Budi Santoso</h2>
-        <p>Mahasiswa UMKT</p>
-    </div>
 
-    <div class="stats-card">
-        <h3>Performa Belajar Minggu Ini</h3>
-
-        <div class="chart">
-            <div class="bar" style="height:50px;">
-                <span>S</span>
-            </div>
-
-            <div class="bar" style="height:70px;">
-                <span>S</span>
-            </div>
-
-            <div class="bar" style="height:95px;">
-                <span>R</span>
-            </div>
-
-            <div class="bar active" style="height:130px;">
-                <span>K</span>
-            </div>
-
-            <div class="bar" style="height:115px;">
-                <span>J</span>
-            </div>
-
-            <div class="bar" style="height:60px;">
-                <span>S</span>
-            </div>
-
-            <div class="bar" style="height:85px;">
-                <span>M</span>
-            </div>
+        <div class="profile-avatar">
+            {{ username|first|upper }}
         </div>
+
+        <h2>{{ username }}</h2>
+
+        <p>{{ email }}</p>
+
     </div>
 
+    <!-- PROGRESS -->
+    <div class="progress-wrapper">
+
+        <div class="progress-top">
+
+            <h5>Progress Belajar</h5>
+
+            <span>{{ progress }}%</span>
+
+        </div>
+
+        <div class="progress">
+
+            <div class="progress-bar"
+                 style="width: {{ progress }}%;">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SUMMARY -->
     <div class="summary">
+
         <div class="summary-box">
-            <p>Total Jam</p>
-            <h4>28</h4>
+
+            <p>Total Tugas</p>
+
+            <h3>{{ total_tugas }}</h3>
+
         </div>
 
         <div class="summary-box">
-            <p>Tugas Selesai</p>
-            <h4>15</h4>
+
+            <p>Total Belajar</p>
+
+            <h3>{{ total_belajar }}</h3>
+
         </div>
-    </div>
-
-    <div class="menu-list">
-
-        <a href="#" class="menu-item">
-            <div class="menu-left">
-                <div class="menu-icon">⚙</div>
-                <div>
-                    <strong>Pengaturan Notifikasi</strong><br>
-                    <small>Fitur Reminder</small>
-                </div>
-            </div>
-            >
-        </a>
-
-        <a href="#" class="menu-item">
-            <div class="menu-left">
-                <div class="menu-icon">🔒</div>
-                <div>
-                    <strong>Keamanan Akun</strong>
-                </div>
-            </div>
-            >
-        </a>
-
-        <a href="#" class="menu-item">
-            <div class="menu-left">
-                <div class="menu-icon">❓</div>
-                <div>
-                    <strong>Bantuan & Dukungan</strong>
-                </div>
-            </div>
-            >
-        </a>
-
-        <a href="{% url 'login' %}" class="menu-item">
-            <div class="menu-left">
-                <div class="menu-icon">↩</div>
-                <div>
-                    <strong>Keluar</strong>
-                </div>
-            </div>
-            >
-        </a>
 
     </div>
+
+    <!-- LOGOUT -->
+    {% if user.is_authenticated %}
+
+        <a href="{% url 'logout' %}" class="logout-btn">
+
+            ⮐ Logout
+
+        </a>
+
+    {% else %}
+
+        <a href="{% url 'login' %}" class="logout-btn"
+           style="background:linear-gradient(135deg,#4e5bf2,#1c2f92);">
+
+            ⮕ Login
+
+        </a>
+
+    {% endif %}
 
 </div>
 

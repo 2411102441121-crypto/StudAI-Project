@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Jadwal, ChatMessage
+from .models import Jadwal, ChatMessage, Folder, Modul
 from .forms import JadwalForm
 
 from datetime import date, datetime, timedelta
@@ -174,6 +174,63 @@ def schedule(request):
         'semua_jadwal': semua_jadwal,
     })
 
+# Di dalam views.py
+@login_required
+def book_main(request):
+    # 1. Ambil semester dari URL (misal: ?semester=Semester 3)
+    # Jika tidak ada di URL, default ke 'Semester 1'
+    semester_aktif = request.GET.get('semester', 'Semester 1')
+    
+    # 2. PERBAIKAN: Tambahkan filter semester=semester_aktif
+    folders = Folder.objects.filter(
+        user=request.user, 
+        semester=semester_aktif  # <-- Ini yang menyaring agar folder semester lain tidak muncul
+    ).order_by('-created_at')
+
+    if request.method == "POST":
+        nama_folder = request.POST.get('nama_folder')
+        if nama_folder:
+            Folder.objects.create(
+                user=request.user, 
+                nama=nama_folder, 
+                semester=semester_aktif # Agar folder baru masuk ke semester yang sedang dibuka
+            )
+            return redirect(f'/book/?semester={semester_aktif}')
+
+    return render(request, 'book.html', {
+        'folders': folders, 
+        'semester_aktif': semester_aktif
+    })
+
+@login_required
+def detail_folder(request, folder_id):
+    # Melihat isi folder (daftar modul)
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    moduls = folder.files.all().order_by('-uploaded_at') # related_name='files' di model
+
+    if request.method == "POST":
+        judul = request.POST.get('judul')
+        file_upload = request.FILES.get('file_modul') # Gunakan request.FILES untuk file
+        
+        if judul and file_upload:
+            Modul.objects.create(
+                folder=folder,
+                judul=judul,
+                isi_file=file_upload
+            )
+            return redirect('detail_folder', folder_id=folder.id)
+
+    return render(request, 'detail_folder.html', {
+        'folder': folder,
+        'moduls': moduls
+    })
+
+@login_required
+def hapus_folder(request, folder_id):
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    folder.delete()
+    return redirect('book_main')
+
 @login_required
 def toggle_selesai(request, jadwal_id):
     jadwal = Jadwal.objects.get(id=jadwal_id, user=request.user)
@@ -222,21 +279,60 @@ def api_chat_response(request):
         except Exception as e:
             return JsonResponse({"status": "error", "reply": str(e)})
 
+from datetime import timedelta
+
+@login_required
 def profil(request):
 
-    total_tugas = Jadwal.objects.filter(
-        user=request.user,
-        tipe='tugas'
-    ).count()
+    today = date.today()
 
-    total_belajar = Jadwal.objects.filter(
-        user=request.user,
-        tipe='belajar'
-    ).count()
+    # =========================
+    # SEMUA JADWAL USER
+    # =========================
 
     semua_jadwal = Jadwal.objects.filter(
         user=request.user
+    )
+
+    # =========================
+    # TOTAL TUGAS
+    # =========================
+
+    total_tugas = semua_jadwal.filter(
+        tipe='tugas'
     ).count()
+
+    # =========================
+    # TOTAL BELAJAR
+    # =========================
+
+    total_belajar = semua_jadwal.filter(
+        is_selesai=True
+    ).count()
+
+    # =========================
+    # PROGRESS SETIAP HARI (TUGAS + BELAJAR)
+    # =========================
+
+    jadwal_aktif = semua_jadwal.filter(
+    tanggal__gte=today
+)
+
+    total_hari_ini = jadwal_aktif.count()
+
+    selesai_hari_ini = jadwal_aktif.filter(
+        is_selesai=True
+).count()
+
+    if total_hari_ini > 0:
+
+        progress = int(
+            (selesai_hari_ini / total_hari_ini) * 100
+        )
+
+    else:
+
+        progress = 0
 
     context = {
 
@@ -248,7 +344,7 @@ def profil(request):
 
         'total_belajar': total_belajar,
 
-        'semua_jadwal': semua_jadwal,
+        'progress': progress,
     }
 
     return render(request, 'profil.html', context)

@@ -91,7 +91,7 @@
         <span>Schedule</span>
     </a>
     <!-- Ganti # dengan URL yang sesuai nanti -->
-    <a href="#" class="nav-item"> 
+    <a href="{% url 'book_main' %}" class="nav-item {% if request.resolver_match.url_name == 'book_main' or request.resolver_match.url_name == 'detail_folder' %}active{% endif %}"> 
         <i class="fas fa-book"></i>
         <span>Book</span>
     </a>
