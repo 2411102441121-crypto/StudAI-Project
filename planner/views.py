@@ -31,25 +31,21 @@ def home(request):
         form = JadwalForm()
 
     # --- LOGIKA UNTUK PROGRESS BAR (Dinamis) ---
-    # 1. Ambil jadwal khusus hari ini saja untuk dihitung progressnya
     jadwal_hari_ini = Jadwal.objects.filter(user=request.user, tanggal=today)
     total_tugas = jadwal_hari_ini.count()
     tugas_selesai = jadwal_hari_ini.filter(is_selesai=True).count()
     
-    # 2. Hitung persentase tugas selesai
     if total_tugas > 0:
         persentase = int((tugas_selesai / total_tugas) * 100)
     else:
         persentase = 0 
         
     # --- LOGIKA UNTUK LIST JADWAL TERDEKAT ---
-    # 3. Ambil 5 jadwal mendatang untuk ditampilkan di halaman home
     jadwal_terdekat = Jadwal.objects.filter(
         user=request.user, 
         tanggal__gte=today
     ).order_by('tanggal', 'jam_deadline', 'waktu_mulai')[:5]
 
-    # Kirim semua data ke home.html
     context = {
         'form': form,
         'nama_user': request.user.username,
@@ -61,7 +57,6 @@ def home(request):
 
 def login(request):
     if request.method == 'POST':
-        # Mengambil data dari form secara manual
         u_name = request.POST.get('username')
         p_word = request.POST.get('password')
         user = authenticate(request, username=u_name, password=p_word)
@@ -73,17 +68,15 @@ def login(request):
     return render(request, 'login.html')
 
 def register(request):
-    # Implementasi pendaftaran pengguna baru (opsional)
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save() # Menyimpan user baru ke Database (Data Layer)
+            form.save() 
             username = form.cleaned_data.get('username')
             messages.success(request, f'Akun berhasil dibuat untuk {username}. Silakan login.')
-            return redirect('login') # Mengarahkan kembali ke halaman login
+            return redirect('login') 
     else:
         form = UserCreationForm()
-
     return render(request, 'register.html', {'form': form})
 
 def tambah_jadwal(request):
@@ -92,26 +85,22 @@ def tambah_jadwal(request):
         kegiatan = request.POST.get('kegiatan')
         tanggal = request.POST.get('tanggal')
         
-        # Ambil waktu berdasarkan tipe yang dipilih
         jam_deadline = request.POST.get('jam_deadline') if tipe == 'tugas' else None
         waktu_mulai = request.POST.get('waktu_mulai') if tipe == 'belajar' else None
         waktu_selesai = request.POST.get('waktu_selesai') if tipe == 'belajar' else None
 
-        # Simpan ke Database
         Jadwal.objects.create(
-            user=request.user, # Pastikan user tersimpan jika sudah login
+            user=request.user, 
             tipe=tipe,
             kegiatan=kegiatan,
-            jam_deadline=jam_deadline, # Masuk ke kolom jam_deadline
+            jam_deadline=jam_deadline, 
             waktu_mulai=waktu_mulai, 
             waktu_selesai=waktu_selesai,
             tanggal=tanggal
         )
         return redirect('home')
-    
     return render(request, 'tambah_jadwal.html')
 
-# Fungsi Edit
 def edit_jadwal(request, pk):
     jadwal = get_object_or_404(Jadwal, pk=pk)
     if request.method == 'POST':
@@ -120,11 +109,9 @@ def edit_jadwal(request, pk):
         jadwal.kegiatan = request.POST.get('kegiatan')
         jadwal.tanggal = request.POST.get('tanggal')
         
-        # Ambil data jam_deadline dari form edit
         jam_dl = request.POST.get('jam_deadline')
         jadwal.jam_deadline = jam_dl if jam_dl else None
         
-        # Ambil data waktu mulai & selesai
         w_mulai = request.POST.get('waktu_mulai')
         jadwal.waktu_mulai = w_mulai if w_mulai else None
         
@@ -133,7 +120,6 @@ def edit_jadwal(request, pk):
         
         jadwal.save()
         return redirect('home')
-        
     return render(request, 'edit_jadwal.html', {'jadwal': jadwal})
 
 def hapus_jadwal(request, id):
@@ -145,11 +131,7 @@ def hapus_jadwal(request, id):
 
 @login_required
 def schedule(request):
-    # Gunakan date.today() sekali saja agar konsisten
     today = date.today()
-    
-    # 1. Membuat Slider Tanggal (2 hari lalu s/d 3 hari ke depan)
-    # Kita buat list nama hari secara statis agar tidak membebani server
     nama_hari_indo = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
     days = []
     
@@ -161,8 +143,6 @@ def schedule(request):
             'full_date': target_date,
         })
 
-    # 2. Ambil data (Optimasi dengan .only() jika perlu, tapi filter ini standarnya cepat)
-    # Menampilkan tugas hari ini dan seterusnya (semua tugas mendatang)
     semua_jadwal = Jadwal.objects.filter(
         user=request.user,
         tanggal__gte=today
@@ -174,43 +154,44 @@ def schedule(request):
         'semua_jadwal': semua_jadwal,
     })
 
-# Di dalam views.py
 @login_required
 def book_main(request):
-    # 1. Ambil semester dari URL (misal: ?semester=Semester 3)
-    # Jika tidak ada di URL, default ke 'Semester 1'
-    semester_aktif = request.GET.get('semester', 'Semester 1')
+    # 1. Ambil keyword pencarian 'q' dari parameter URL (?q=...)
+    query = request.GET.get('q')
     
-    # 2. PERBAIKAN: Tambahkan filter semester=semester_aktif
-    folders = Folder.objects.filter(
-        user=request.user, 
-        semester=semester_aktif  # <-- Ini yang menyaring agar folder semester lain tidak muncul
-    ).order_by('-created_at')
+    # 2. Filter dasar: Ambil folder milik user yang sedang login
+    folders = Folder.objects.filter(user=request.user)
+
+    # 3. Proses jika ada keyword pencarian yang dimasukkan user
+    if query:
+        folders = folders.filter(nama__icontains=query)
+
+    # Urutkan folder berdasarkan waktu pembuatan terbaru
+    folders = folders.order_by('-created_at')
 
     if request.method == "POST":
         nama_folder = request.POST.get('nama_folder')
         if nama_folder:
             Folder.objects.create(
                 user=request.user, 
-                nama=nama_folder, 
-                semester=semester_aktif # Agar folder baru masuk ke semester yang sedang dibuka
+                nama=nama_folder
             )
-            return redirect(f'/book/?semester={semester_aktif}')
+            return redirect('/book/')
 
     return render(request, 'book.html', {
-        'folders': folders, 
-        'semester_aktif': semester_aktif
+        'folders': folders,
+        'query_sekarang': query  # Dikirim balik ke template agar teks di input-box tidak hilang
     })
+
 
 @login_required
 def detail_folder(request, folder_id):
-    # Melihat isi folder (daftar modul)
     folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-    moduls = folder.files.all().order_by('-uploaded_at') # related_name='files' di model
+    moduls = folder.files.all().order_by('-uploaded_at') 
 
     if request.method == "POST":
         judul = request.POST.get('judul')
-        file_upload = request.FILES.get('file_modul') # Gunakan request.FILES untuk file
+        file_upload = request.FILES.get('file_modul') 
         
         if judul and file_upload:
             Modul.objects.create(
@@ -231,16 +212,22 @@ def hapus_folder(request, folder_id):
     folder.delete()
     return redirect('book_main')
 
+def hapus_modul(request, modul_id):
+    if request.method == 'POST':
+        modul = get_object_or_404(Modul, id=modul_id)
+        folder_id = modul.folder.id 
+        modul.delete()
+        return redirect('detail_folder', folder_id=folder_id) 
+
 @login_required
 def toggle_selesai(request, jadwal_id):
     jadwal = Jadwal.objects.get(id=jadwal_id, user=request.user)
-    jadwal.is_selesai = not jadwal.is_selesai # Balikkan status (True jadi False, dsb)
+    jadwal.is_selesai = not jadwal.is_selesai 
     jadwal.save()
     return redirect('schedule')
 
-@login_required # Memastikan hanya user yang sudah login (seperti Ahmad) yang bisa chat
+@login_required 
 def ai_chat(request):
-    # Ambil semua history chat milik user yang sedang aktif
     history = ChatMessage.objects.filter(user=request.user).order_by('timestamp')
     return render(request, 'ai_chat.html', {'history': history})
 
@@ -252,10 +239,8 @@ def api_chat_response(request):
             data = json.loads(request.body)
             user_message = data.get("message", "")
             
-            # 1. Simpan pesan user ke database
             ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
             
-            # Setup API DeepSeek
             api_url = "https://api.deepseek.com/chat/completions"
             api_token = "sk-df07db4db82f4045ab245d78cf884cb8"
             headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
@@ -269,84 +254,37 @@ def api_chat_response(request):
             
             if response.status_code == 200:
                 ai_reply = response.json()["choices"][0]["message"]["content"]
-                
-                # 2. Simpan balasan AI ke database
                 ChatMessage.objects.create(user=request.user, sender='ai', message=ai_reply)
-                
                 return JsonResponse({"status": "success", "reply": ai_reply})
             else:
                 return JsonResponse({"status": "error", "reply": "Server AI sedang sibuk."})
         except Exception as e:
             return JsonResponse({"status": "error", "reply": str(e)})
 
-from datetime import timedelta
-
 @login_required
 def profil(request):
-
     today = date.today()
+    semua_jadwal = Jadwal.objects.filter(user=request.user)
 
-    # =========================
-    # SEMUA JADWAL USER
-    # =========================
+    total_tugas = semua_jadwal.filter(tipe='tugas').count()
+    total_belajar = semua_jadwal.filter(is_selesai=True).count()
 
-    semua_jadwal = Jadwal.objects.filter(
-        user=request.user
-    )
-
-    # =========================
-    # TOTAL TUGAS
-    # =========================
-
-    total_tugas = semua_jadwal.filter(
-        tipe='tugas'
-    ).count()
-
-    # =========================
-    # TOTAL BELAJAR
-    # =========================
-
-    total_belajar = semua_jadwal.filter(
-        is_selesai=True
-    ).count()
-
-    # =========================
-    # PROGRESS SETIAP HARI (TUGAS + BELAJAR)
-    # =========================
-
-    jadwal_aktif = semua_jadwal.filter(
-    tanggal__gte=today
-)
-
+    jadwal_aktif = semua_jadwal.filter(tanggal__gte=today)
     total_hari_ini = jadwal_aktif.count()
-
-    selesai_hari_ini = jadwal_aktif.filter(
-        is_selesai=True
-).count()
+    selesai_hari_ini = jadwal_aktif.filter(is_selesai=True).count()
 
     if total_hari_ini > 0:
-
-        progress = int(
-            (selesai_hari_ini / total_hari_ini) * 100
-        )
-
+        progress = int((selesai_hari_ini / total_hari_ini) * 100)
     else:
-
         progress = 0
 
     context = {
-
         'username': request.user.username,
-
         'email': request.user.email,
-
         'total_tugas': total_tugas,
-
         'total_belajar': total_belajar,
-
         'progress': progress,
     }
-
     return render(request, 'profil.html', context)
 
 def logout(request):
