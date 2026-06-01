@@ -21,6 +21,7 @@ urlpatterns = [
     path('book/', views.book_main, name='book_main'),
     path('book/folder/<int:folder_id>/', views.detail_folder, name='detail_folder'),
     path('book/folder/hapus/<int:folder_id>/', views.hapus_folder, name='hapus_folder'),
+    path('modul/hapus/<int:modul_id>/', views.hapus_modul, name='hapus_modul'),
     path('ai_chat/', views.ai_chat, name='ai_chat'), # Ini halaman chat utama kamu
     path('ai_chat/get_response/', views.api_chat_response, name='api_chat_response'), # Ini untuk handle API-nya
     path('profil/', views.profil, name='profil'),

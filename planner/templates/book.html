@@ -5,25 +5,8 @@
     .search-bar {
         background: #f1f3f5;
         border-radius: 50px;
-        padding: 10px 20px;
+        padding: 5px 20px;
         border: none;
-    }
-    .filter-tab {
-        white-space: nowrap;
-        overflow-x: auto;
-        padding-bottom: 10px;
-    }
-    .btn-filter {
-        border-radius: 20px;
-        margin-right: 5px;
-        font-size: 12px;
-        padding: 5px 15px;
-        border: 1px solid #000066;
-        color: #000066;
-    }
-    .btn-filter.active {
-        background: #000066;
-        color: white;
     }
     .module-card {
         border-radius: 20px;
@@ -32,16 +15,26 @@
         transition: 0.3s;
     }
     .module-card:hover { transform: translateY(-5px); }
+    
+    /* MODIFIKASI GAMBAR: Menggunakan kombinasi warna gradasi pastel modern */
     .module-img {
         height: 100px;
-        background: #e9ecef;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4); /* Efek gradasi modern */
         border-radius: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 10px;
     }
-    /* Floating Action Button */
+    
+    /* Variasi gradasi alternatif otomatis menggunakan pseudo-class agar tidak monoton */
+    .col-6:nth-child(2n) .module-img {
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+    }
+    .col-6:nth-child(3n) .module-img {
+        background: linear-gradient(135deg, #10b981, #3b82f6);
+    }
+
     .fab-add {
         position: fixed;
         bottom: 90px;
@@ -49,7 +42,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: #000066; /* Warna Toska seperti referensi */
+        background: #000066;
         color: white;
         display: flex;
         align-items: center;
@@ -65,18 +58,16 @@
     <h4 class="fw-bold mb-3">Modul Saya</h4>
     
     <div class="mb-3">
-        <div class="input-group search-bar">
-            <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-muted"></i></span>
-            <input type="text" class="form-control bg-transparent border-0" placeholder="Cari mata kuliah atau materi...">
-        </div>
+        <form method="GET" action="{% url 'book_main' %}">
+            <div class="input-group search-bar">
+                <span class="input-group-text bg-transparent border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control bg-transparent border-0" placeholder="Cari mata kuliah..." value="{{ query_sekarang|default:'' }}">
+                {% if query_sekarang %}
+                    <a href="{% url 'book_main' %}" class="btn d-flex align-items-center text-muted border-0 bg-transparent"><i class="fas fa-times"></i></a>
+                {% endif %}
+            </div>
+        </form>
     </div>
-
-<div class="filter-tab d-flex mb-3">
-    <a href="?semester=Semester 3" class="btn btn-filter {% if semester_aktif == 'Semester 3' %}active{% endif %}">Semester 3</a>
-    <a href="?semester=Semester 4" class="btn btn-filter {% if semester_aktif == 'Semester 4' %}active{% endif %}">Semester 4</a>
-    <a href="?semester=Semester 5" class="btn btn-filter {% if semester_aktif == 'Semester 5' %}active{% endif %}">Semester 5</a>
-    <a href="?semester=Arsip" class="btn btn-filter {% if semester_aktif == 'Arsip' %}active{% endif %}">Arsip</a>
-</div>
 
     <div class="row g-3 mt-2">
         {% for folder in folders %}
@@ -84,15 +75,15 @@
             <div class="card module-card p-2">
                 <a href="{% url 'detail_folder' folder.id %}" class="text-decoration-none text-dark">
                     <div class="module-img">
-                        <i class="fas fa-microchip fa-2x text-secondary"></i>
+                        <i class="fas fa-folder fa-2x text-white"></i>
                     </div>
-                    <h6 class="fw-bold mb-0" style="font-size: 14px;">{{ folder.nama }}</h6>
+                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 14px;" title="{{ folder.nama }}">{{ folder.nama }}</h6>
                     <small class="text-muted" style="font-size: 11px;">{{ folder.files.count }} Materi PDF</small>
                 </a>
                 <div class="d-flex justify-content-end mt-1">
                     <form action="{% url 'hapus_folder' folder.id %}" method="POST">
                         {% csrf_token %}
-                        <button type="submit" class="btn text-danger btn-sm p-0" onclick="return confirm('Hapus folder?')">
+                        <button type="submit" class="btn text-danger btn-sm p-0" onclick="return confirm('Hapus folder beserta seluruh isinya?')">
                             <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
                         </button>
                     </form>
@@ -101,7 +92,8 @@
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
-            <p class="text-muted">Klik tombol + untuk menambah folder baru</p>
+            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+            <p class="text-muted">Folder tidak ditemukan atau belum dibuat.</p>
         </div>
         {% endfor %}
     </div>
