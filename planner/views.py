@@ -12,6 +12,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from django.conf import settings
+
 import requests
 import json
 
@@ -238,26 +240,60 @@ def api_chat_response(request):
         try:
             data = json.loads(request.body)
             user_message = data.get("message", "")
-            
+
+            # 1. Simpan pesan user ke database
             ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
+
+            # 2. Konfigurasi Google Gemini API
+            # Tambahkan "models/" sebelum nama modelnya agar Google mengenali jalurnya
+            model_name = "models/gemini-2.5-flash"
+            api_token = settings.GEMINI_API_KEY
             
-            api_url = "https://api.deepseek.com/chat/completions"
-            api_token = "sk-df07db4db82f4045ab245d78cf884cb8"
-            headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
-            payload = {
-                "model": "deepseek-chat",
-                "messages": [{"role": "user", "content": user_message}],
-                "stream": False
+            # Gabungkan menjadi URL endpoint yang utuh
+            api_url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_token}"
+
+            headers = {
+                "Content-Type": "application/json"
             }
-            
+
+            # 3. Sesuaikan Format Payload JSON untuk Gemini
+            # Struktur Gemini: {"contents": [{"parts": [{"text": "pesan"}]}]}
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": user_message}
+                        ]
+                    }
+                ]
+            }
+
+            print(api_url)
+
+            # 4. Kirim Request ke Google
             response = requests.post(api_url, headers=headers, json=payload)
-            
+
+            print(response.status_code)
+            print(response.text)
+
             if response.status_code == 200:
-                ai_reply = response.json()["choices"][0]["message"]["content"]
+                response_data = response.json()
+                
+                # 5. Cara membaca jawaban/output dari JSON Google Gemini
+                try:
+                    ai_reply = response_data["candidates"][0]["content"]["parts"][0]["text"]
+                except (KeyError, IndexError):
+                    ai_reply = "Maaf, sistem gagal membaca respon dari AI."
+
+                # 6. Simpan pesan AI ke database dan kirim kembali ke frontend
                 ChatMessage.objects.create(user=request.user, sender='ai', message=ai_reply)
                 return JsonResponse({"status": "success", "reply": ai_reply})
             else:
-                return JsonResponse({"status": "error", "reply": "Server AI sedang sibuk."})
+                return JsonResponse({
+                    "status": "error",
+                    "reply": response.text
+                    })
+
         except Exception as e:
             return JsonResponse({"status": "error", "reply": str(e)})
 
