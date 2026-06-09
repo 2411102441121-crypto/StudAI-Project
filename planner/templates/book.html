@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     .search-bar {
         background: #f1f3f5;
@@ -16,10 +19,9 @@
     }
     .module-card:hover { transform: translateY(-5px); }
     
-    /* MODIFIKASI GAMBAR: Menggunakan kombinasi warna gradasi pastel modern */
     .module-img {
         height: 100px;
-        background: linear-gradient(135deg, #4f46e5, #06b6d4); /* Efek gradasi modern */
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
         border-radius: 15px;
         display: flex;
         align-items: center;
@@ -27,7 +29,6 @@
         margin-bottom: 10px;
     }
     
-    /* Variasi gradasi alternatif otomatis menggunakan pseudo-class agar tidak monoton */
     .col-6:nth-child(2n) .module-img {
         background: linear-gradient(135deg, #6366f1, #a855f7);
     }
@@ -81,9 +82,9 @@
                     <small class="text-muted" style="font-size: 11px;">{{ folder.files.count }} Materi PDF</small>
                 </a>
                 <div class="d-flex justify-content-end mt-1">
-                    <form action="{% url 'hapus_folder' folder.id %}" method="POST">
+                    <form id="form-hapus-{{ folder.id }}" action="{% url 'hapus_folder' folder.id %}" method="POST">
                         {% csrf_token %}
-                        <button type="submit" class="btn text-danger btn-sm p-0" onclick="return confirm('Hapus folder beserta seluruh isinya?')">
+                        <button type="button" class="btn text-danger btn-sm p-0" onclick="konfirmasiHapus('{{ folder.id }}')">
                             <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
                         </button>
                     </form>
@@ -122,4 +123,28 @@
         </div>
     </div>
 </div>
+
+<script>
+function konfirmasiHapus(folderId) {
+    Swal.fire({
+        title: 'Hapus folder beserta seluruh isinya?',
+        text: "Tindakan ini tidak dapat dibatalkan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#8B4F3E', // Menyesuaikan warna kecokelatan di mock-up kamu
+        cancelButtonColor: '#f1f3f5',
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            cancelButton: 'text-dark border' // Agar teks tombol cancel terlihat jelas jika background putih/abu
+        },
+        reverseButtons: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mengirimkan form spesifik berdasarkan ID folder yang dipilih
+            document.getElementById('form-hapus-' + folderId).submit();
+        }
+    });
+}
+</script>
 {% endblock %}

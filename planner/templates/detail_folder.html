@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     .back-btn {
         width: 40px;
@@ -78,9 +81,10 @@
                     <a href="{{ modul.isi_file.url }}" class="btn btn-sm btn-light rounded-pill px-3 fw-bold" target="_blank" style="font-size: 12px; color: #000066;">
                         Buka
                     </a>
-                    <form action="{% url 'hapus_modul' modul.id %}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus modul ini?');" style="display: inline;">
+                    
+                    <form id="form-hapus-modul-{{ modul.id }}" action="{% url 'hapus_modul' modul.id %}" method="POST" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" style="height: 29px; width: 29px;">
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 d-flex align-items-center justify-content-center" style="height: 29px; width: 29px;" onclick="konfirmasiHapusModul('{{ modul.id }}', '{{ modul.judul|escapejs }}')">
                             <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
                         </button>
                     </form>
@@ -95,4 +99,29 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+function konfirmasiHapusModul(modulId, judulModul) {
+    Swal.fire({
+        title: 'Hapus Modul?',
+        html: `Apakah Anda yakin ingin menghapus modul <strong>${judulModul}</strong>?`,
+        icon: 'error', 
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Warna merah cerah untuk hapus
+        cancelButtonColor: '#ffffff',  // Warna putih untuk batal
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal',
+        customClass: {
+            cancelButton: 'text-dark border shadow-sm', // Sesuai styling tombol Batal sebelumnya
+            confirmButton: 'shadow-sm'
+        },
+        reverseButtons: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Memicu submit form spesifik berdasarkan ID modul
+            document.getElementById('form-hapus-modul-' + modulId).submit();
+        }
+    });
+}
+</script>
 {% endblock %}
