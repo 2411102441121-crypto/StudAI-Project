@@ -276,6 +276,12 @@ def api_chat_response(request):
             print(response.status_code)
             print(response.text)
 
+            if response.status_code == 503:
+                return JsonResponse({
+                    "status": "error",
+                    "reply": "StudAI sedang ramai digunakan. Silakan coba lagi beberapa saat."
+                    })
+
             if response.status_code == 200:
                 response_data = response.json()
                 
