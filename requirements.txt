@@ -64,7 +64,7 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.18.0
 PyJWT==2.12.1
-PyMySQL @ file:///C:/PyMySQL-1.1.1-py3-none-any.whl#sha256=4de15da4c61dc132f4fb9ab763063e693d521a80fd0e87943b9a453dd4c19d6c
+PyMySQL==1.1.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
