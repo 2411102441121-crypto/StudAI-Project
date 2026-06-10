@@ -36,7 +36,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6*n3@i1#$ov_cf##r&looia-*2b+@6+n+geem6iip5y#ove27l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -167,10 +167,12 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Di dalam settings.py
 LOGIN_URL = '/login/'  # Sesuaikan dengan 'name' pada path login di urls.py kamu
-LOGIN_REDIRECT_URL = 'home'
+# LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = '/register/'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # Opsional: arahkan ke login setelah logout
 
 # Izinkan domain Railway untuk mengirim data POST/Formulir
 CSRF_TRUSTED_ORIGINS = [
     'https://studai-project-production.up.railway.app',
+    'https://*.railway.app',
 ]
