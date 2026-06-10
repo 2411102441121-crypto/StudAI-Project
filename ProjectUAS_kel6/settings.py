@@ -37,7 +37,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6*n3@i1#$ov_cf##r&looia-*2b+@6+n+geem6iip5y#ove27l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -107,10 +107,11 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# <-- 3. Blok DATABASES lama kamu ditimpa dengan konfigurasi dinamis ini
+# Database Cloud Dinamis dengan Pemaksaan Engine MySQL Django
 DATABASES = {
     'default': dj_database_url.config(
-        default='mysql://root:@127.0.0.1:3306/database_studai'
+        default='mysql://root:@127.0.0.1:3306/database_studai',
+        engine='django.db.backends.mysql'  # <-- Ini kunci penyelematnya!
     )
 }
 
