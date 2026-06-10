@@ -169,3 +169,8 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 LOGIN_URL = '/login/'  # Sesuaikan dengan 'name' pada path login di urls.py kamu
 LOGIN_REDIRECT_URL = 'home'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # Opsional: arahkan ke login setelah logout
+
+# Izinkan domain Railway untuk mengirim data POST/Formulir
+CSRF_TRUSTED_ORIGINS = [
+    'https://studai-project-production.up.railway.app',
+]
