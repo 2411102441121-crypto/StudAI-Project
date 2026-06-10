@@ -104,14 +104,11 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 #     }
 # }
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-# Database Cloud Dinamis dengan Pemaksaan Engine MySQL Django
 DATABASES = {
     'default': dj_database_url.config(
-        default='mysql://root:@127.0.0.1:3306/database_studai',
-        engine='django.db.backends.mysql'  # <-- Ini kunci penyelematnya!
+        # Mengambil env bernama DATABASE_URL dari Railway
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
     )
 }
 
