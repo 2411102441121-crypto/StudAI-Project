@@ -1,0 +1,1 @@
+web: gunicorn ProjectUAS_kel6.wsgi
