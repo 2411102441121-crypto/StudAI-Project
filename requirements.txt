@@ -69,7 +69,6 @@ pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 pythonds==1.2.1
-pywin32==308
 pyzmq==26.2.0
 requests==2.33.1
 six==1.16.0
