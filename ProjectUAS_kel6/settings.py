@@ -105,11 +105,14 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 # }
 
 DATABASES = {
-    'default': dj_database_url.config(
-        # Mengambil env bernama DATABASE_URL dari Railway
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('MYSQL_DATABASE'),
+        'USER': os.environ.get('MYSQLUSER'),
+        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+        'HOST': os.environ.get('MYSQLHOST'),
+        'PORT': os.environ.get('MYSQLPORT'),
+    }
 }
 
 
