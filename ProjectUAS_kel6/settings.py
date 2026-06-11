@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from logging import root
 import os
 from dotenv import load_dotenv
+
 import dj_database_url
 
 # Load file .env
@@ -95,6 +96,7 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# # sebelum hosting
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
@@ -104,6 +106,7 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 #     }
 # }
 
+# setelah hosting
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',

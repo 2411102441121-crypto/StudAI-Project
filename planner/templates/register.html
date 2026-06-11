@@ -94,6 +94,15 @@
             font-weight:700;
             text-decoration:none;
         }
+
+        .password-hint{
+            display:block;
+            margin-top:8px;
+            text-align:left;
+            padding-left:10px;
+            color:#666;
+            font-size:12px;
+        }
     </style>
 </head>
 
@@ -132,6 +141,10 @@
                        placeholder="Confirm Password"
                        required>
             </div>
+
+            <small class="password-hint">
+                🔒 Password minimal 8 karakter
+            </small>
 
             <button type="submit" class="btn-register">
                 Register
