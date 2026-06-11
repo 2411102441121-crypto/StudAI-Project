@@ -43,7 +43,7 @@ Markdown==3.10.2
 matplotlib==3.10.1
 matplotlib-inline==0.1.7
 mysql-connector==2.2.9
-mysqlclient==2.2.8
+# mysqlclient==2.2.8
 nest-asyncio==1.6.0
 networkx==3.4.2
 numpy==2.2.5
@@ -64,12 +64,11 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.18.0
 PyJWT==2.12.1
-PyMySQL @ file:///C:/PyMySQL-1.1.1-py3-none-any.whl#sha256=4de15da4c61dc132f4fb9ab763063e693d521a80fd0e87943b9a453dd4c19d6c
+PyMySQL==1.1.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 pythonds==1.2.1
-pywin32==308
 pyzmq==26.2.0
 requests==2.33.1
 six==1.16.0
@@ -86,3 +85,5 @@ urllib3==2.6.3
 virtualenv==20.31.2
 wcwidth==0.2.13
 whitenoise==6.12.0
+
+dj-database-url==2.1.0

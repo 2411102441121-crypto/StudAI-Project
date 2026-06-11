@@ -13,6 +13,8 @@ from logging import root
 import os
 from dotenv import load_dotenv
 
+import dj_database_url
+
 # Load file .env
 load_dotenv()
 
@@ -36,7 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6*n3@i1#$ov_cf##r&looia-*2b+@6+n+geem6iip5y#ove27l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -94,12 +96,25 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# # sebelum hosting
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'database_studai',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#     }
+# }
+
+# setelah hosting
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'database_studai',
-        'USER': 'root',
-        'PASSWORD': '',
+        'NAME': os.environ.get('MYSQL_DATABASE'),
+        'USER': os.environ.get('MYSQLUSER'),
+        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+        'HOST': os.environ.get('MYSQLHOST'),
+        'PORT': os.environ.get('MYSQLPORT'),
     }
 }
 
@@ -167,5 +182,12 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Di dalam settings.py
 LOGIN_URL = '/login/'  # Sesuaikan dengan 'name' pada path login di urls.py kamu
-LOGIN_REDIRECT_URL = 'home'
+# LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = '/home/'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # Opsional: arahkan ke login setelah logout
+
+# Izinkan domain Railway untuk mengirim data POST/Formulir
+CSRF_TRUSTED_ORIGINS = [
+    'https://studai-project-production.up.railway.app',
+    'https://*.railway.app',
+]
