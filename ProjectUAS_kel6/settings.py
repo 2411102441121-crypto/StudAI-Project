@@ -13,7 +13,7 @@ from logging import root
 import os
 from dotenv import load_dotenv
 
-import dj_database_url
+#import dj_database_url # HOSTING: Untuk parsing DATABASE_URL dari Railway
 
 # Load file .env
 load_dotenv()
@@ -96,27 +96,27 @@ WSGI_APPLICATION = 'ProjectUAS_kel6.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# # sebelum hosting
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'database_studai',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#     }
-# }
-
-# setelah hosting
+# SEBELUM HOSTING
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DATABASE'),
-        'USER': os.environ.get('MYSQLUSER'),
-        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
-        'HOST': os.environ.get('MYSQLHOST'),
-        'PORT': os.environ.get('MYSQLPORT'),
+        'NAME': 'database_studai',
+        'USER': 'root',
+        'PASSWORD': '',
     }
 }
+
+# # setelah hosting
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.environ.get('MYSQL_DATABASE'),
+#         'USER': os.environ.get('MYSQLUSER'),
+#         'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+#         'HOST': os.environ.get('MYSQLHOST'),
+#         'PORT': os.environ.get('MYSQLPORT'),
+#     }
+# }
 
 
 # Password validation
