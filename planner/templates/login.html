@@ -191,7 +191,7 @@
                    required>
 
             <!-- Menampilkan pesan error jika login gagal (views.py) -->
-            {% if error %}
+            {% if error %} <!--percabangan (conditional statement) pada django template-->
                 <p style="color:red; font-size:12px; margin-top:-10px; margin-bottom:10px;">
                     {{ error }}
                 </p>

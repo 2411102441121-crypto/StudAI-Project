@@ -345,11 +345,11 @@ def api_chat_response(request):
 
             # Format JSON yang dikirim ke Gemini
             payload = {
-                "contents": [
+                "contents": [                           # content = isi respon dari AI
                     {
-                        "parts": [
+                        "parts": [                      # parts = bagian-bagian isi jawaban
                             {
-                                "text": user_message
+                                "text": user_message    # text = teks jawaban yang sebenarnya ingin ditampilkan ke user
                             }
                         ]
                     }
@@ -379,10 +379,10 @@ def api_chat_response(request):
                 try:
                     # Mengambil jawaban AI dari response Gemini (kotak JSON)
                     ai_reply = response_data[
-                        "candidates"
-                    ][0][
+                        "candidates"    # candidates = daftar jawaban yang diberikan Gemini.
+                    ][0][               # Biasanya hanya ada 1 jawaban, Ambil kandidat jawaban pertama 
                         "content"
-                    ][
+                    ][                  # Karena program harus masuk ke struktur JSON satu per satu: sampai ke "text"
                         "parts"
                     ][0][
                         "text"
@@ -417,7 +417,7 @@ def api_chat_response(request):
 
         except Exception as e:
 
-            # Menangani error yang tidak terduga
+            # Menangani error yang tidak terduga (seperti koneksi internet terputus, API Gemini bermasalah)
             return JsonResponse({
                 "status": "error",
                 "reply": str(e)
