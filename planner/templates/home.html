@@ -1,140 +1,310 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends 'base.html' %} <!-- Menggunakan template induk base.html -->
+{% load static %} <!-- Memanggil tag static Django -->
 
-{% block content %}
+{% block content %} <!-- Awal blok content -->
+
 <style>
-    /* UI Styling Dashboard */
-    
-    .progress-card { background: white; border-radius: 25px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .progress-circle { 
-        width: 120px; height: 120px; border-radius: 50%; 
-        background: white; border: 10px solid #00CD00; 
-        display: flex; align-items: center; justify-content: center; 
-        margin: 0 auto; font-size: 24px; font-weight: bold; 
+    /* Styling kartu progress */
+    .progress-card {
+        background: white;
+        border-radius: 25px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
 
-    /* Efek Tugas Selesai */
+    /* Styling lingkaran progress */
+    .progress-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        border: 10px solid #00CD00;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    /* Styling jika tugas selesai */
     .card-completed {
         background-color: #f8f9fa !important;
         opacity: 0.7;
-        border-left-color: #6c757d !important; /* Berubah jadi abu-abu */
+        border-left-color: #6c757d !important;
     }
+
+    /* Teks tugas selesai dicoret */
     .task-text-completed {
         text-decoration: line-through;
         color: #adb5bd !important;
     }
 
+    /* Tombol tambah jadwal melayang */
     .btn-add-floating {
-        position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px;
-        background-color: #000066; color: white; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px; text-decoration: none; z-index: 999;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background-color: #000066;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        text-decoration: none;
+        z-index: 999;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 </style>
 
+<!-- Header Dashboard -->
 <div class="user-header mb-4">
     <div>
-        <p class="text-muted">
-            <i class="far fa-calendar-alt me-1"></i> {% now "j F Y" %} 
-            <span class="mx-2">|</span>
-            <i class="far fa-clock me-1"></i> 
-            <span id="realtime-clock">{% now "H:i" %}</span>
-        </p>
-        <h4 class="mb-0 fw-bold">Halo, {{ nama_user }}!</h4>
-        <p class="text-muted small">Sudah siap belajar hari ini?</p>
-    </div>
 
+        <!-- Menampilkan tanggal hari ini -->
+        <p class="text-muted">
+            <i class="far fa-calendar-alt me-1"></i>
+            {% now "j F Y" %}
+
+            <span class="mx-2">|</span>
+
+            <!-- Menampilkan jam -->
+            <i class="far fa-clock me-1"></i>
+            <span id="realtime-clock">
+                {% now "H:i" %}
+            </span>
+        </p>
+
+        <!-- Menampilkan nama user -->
+        <h4 class="mb-0 fw-bold">
+            Halo, {{ nama_user }}!
+        </h4>
+
+        <p class="text-muted small">
+            Sudah siap belajar hari ini?
+        </p>
+
+    </div>
+</div>
+
+<!-- Card Progress -->
 <div class="card progress-card p-4 text-center mb-4">
-   <div class="progress-circle" id="progress-val">
+
+    <!-- Lingkaran progress -->
+    <div class="progress-circle" id="progress-val">
         {{ persentase }}%
     </div>
+
     <p class="mt-3 fw-bold mb-0">
+
+        <!-- Jika progress 100% -->
         {% if persentase == 100 %}
             Target Hari Ini Selesai! ✨
+
+        <!-- Jika belum 100% -->
         {% else %}
             Target Hari Ini Belum Selesai
         {% endif %}
+
     </p>
 </div>
 
-<h5 class="fw-bold mb-3">Jadwal Terdekat</h5>
+<!-- Judul section -->
+<h5 class="fw-bold mb-3">
+    Jadwal Terdekat
+</h5>
 
+<!-- Looping jadwal -->
 {% for j in jadwal_terdekat %}
-<div class="card mb-3 shadow-sm border-0 {% if j.is_selesai %}card-completed{% endif %}" 
-     style="border-radius: 15px; border-left: 5px solid {% if j.tipe == 'tugas' %}#dc3545{% else %}#0d6efd{% endif %} !important;">
+
+<div
+class="card mb-3 shadow-sm border-0 {% if j.is_selesai %}card-completed{% endif %}"
+
+style="
+border-radius:15px;
+border-left:5px solid
+{% if j.tipe == 'tugas' %}
+#dc3545
+{% else %}
+#0d6efd
+{% endif %}
+!important;
+">
+
     <div class="card-body p-3">
+
         <div class="d-flex justify-content-between align-items-center">
+
             <div class="flex-grow-1">
+
+                <!-- Nama kegiatan -->
                 <h6 class="fw-bold mb-1 {% if j.is_selesai %}task-text-completed{% endif %}">
                     {{ j.kegiatan }}
                 </h6>
+
+                <!-- Informasi tanggal dan jam -->
                 <p class="text-muted small mb-0">
-                    <i class="far fa-calendar-alt me-1"></i> {{ j.tanggal|date:"d M Y" }} | 
-                    <i class="far fa-clock me-1"></i> 
-                    
+
+                    <i class="far fa-calendar-alt me-1"></i>
+                    {{ j.tanggal|date:"d M Y" }}
+
+                    |
+
+                    <i class="far fa-clock me-1"></i>
+
+                    <!-- Jika tipe tugas -->
                     {% if j.tipe == 'tugas' %}
-                        Deadline: {% if j.jam_deadline %}{{ j.jam_deadline|time:"H:i" }}{% else %}<span class="text-danger">Isi Jam via Edit</span>{% endif %}
+
+                        Deadline:
+
+                        {% if j.jam_deadline %}
+                            {{ j.jam_deadline|time:"H:i" }}
+                        {% else %}
+                            <span class="text-danger">
+                                Isi Jam via Edit
+                            </span>
+                        {% endif %}
+
+                    <!-- Jika jadwal biasa -->
                     {% else %}
-                        {{ j.waktu_mulai|time:"H:i" }} - {{ j.waktu_selesai|time:"H:i" }}
+
+                        {{ j.waktu_mulai|time:"H:i" }}
+                        -
+                        {{ j.waktu_selesai|time:"H:i" }}
+
                     {% endif %}
+
                 </p>
+
             </div>
-            
+
+            <!-- Badge dan tombol -->
             <div class="d-flex align-items-center gap-2">
+
+                <!-- Jika selesai -->
                 {% if j.is_selesai %}
+
                     <span class="badge bg-secondary rounded-pill px-3">
-                        <i class="fas fa-check-circle me-1"></i> Selesai
+                        <i class="fas fa-check-circle me-1"></i>
+                        Selesai
                     </span>
+
+                <!-- Jika belum selesai -->
                 {% else %}
+
                     <span class="badge {% if j.tipe == 'tugas' %}bg-danger{% else %}bg-primary{% endif %} rounded-pill px-3">
                         {{ j.tipe|capfirst }}
                     </span>
+
                 {% endif %}
 
-                <a href="{% url 'edit_jadwal' j.id %}" class="btn btn-light btn-sm text-primary"><i class="fas fa-pen"></i></a>
-                <button type="button" class="btn btn-sm btn-light text-danger" onclick="prepareDelete('{{ j.id }}', '{{ j.kegiatan }}')" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <!-- Tombol edit -->
+                <a href="{% url 'edit_jadwal' j.id %}"
+                   class="btn btn-light btn-sm text-primary">
+                    <i class="fas fa-pen"></i>
+                </a>
+
+                <!-- Tombol hapus -->
+                <button
+                    type="button"
+                    class="btn btn-sm btn-light text-danger"
+                    onclick="prepareDelete('{{ j.id }}', '{{ j.kegiatan }}')"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteModal">
+
                     <i class="fas fa-trash"></i>
+
                 </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+<!-- Jika tidak ada data -->
 {% empty %}
+
 <div class="text-center py-4">
-    <p class="text-muted small">Tidak ada jadwal terdekat.</p>
+    <p class="text-muted small">
+        Tidak ada jadwal terdekat.
+    </p>
 </div>
+
 {% endfor %}
 
+<!-- Memanggil modal hapus -->
 {% include 'hapus_jadwal.html' %}
 
+<!-- Tombol tambah jadwal -->
 <a href="{% url 'tambah_jadwal' %}" class="btn-add-floating">
     <i class="fas fa-plus"></i>
 </a>
 
 <script>
+
+    // Menyiapkan data untuk modal hapus
     function prepareDelete(id, nama) {
+
+        // Menampilkan nama jadwal di modal
         document.getElementById('delJadwalName').innerText = nama;
-        document.getElementById('deleteForm').action = "/hapus_jadwal/" + id + "/";
+
+        // Mengubah action form hapus
+        document.getElementById('deleteForm').action =
+        "/hapus_jadwal/" + id + "/";
     }
 
+    // Fungsi update jam realtime
     function updateClock() {
+
         const now = new Date();
-        const clock = document.getElementById('realtime-clock');
+
+        const clock =
+        document.getElementById('realtime-clock');
+
         if(clock) {
-            clock.innerText = now.getHours().toString().padStart(2, '0') + ":" + 
-                             now.getMinutes().toString().padStart(2, '0');
+
+            clock.innerText =
+            now.getHours().toString().padStart(2,'0')
+            + ":"
+            +
+            now.getMinutes().toString().padStart(2,'0');
+
         }
     }
+
+    // Jalankan setiap 1 detik
     setInterval(updateClock, 1000);
+
+    // Jalankan saat halaman pertama dibuka
     updateClock();
+
+    // Ambil nilai progress dari Django
     const progressVal = {{ persentase }};
-    const circle = document.querySelector('.progress-circle');
-    
-    if (progressVal < 100) {
-        circle.style.borderColor = "#ff4d4d"; // Warna Merah jika belum 100%
-    } else {
-        circle.style.borderColor = "#00CD00"; // Warna Hijau jika sudah 100%
+
+    // Ambil elemen lingkaran progress
+    const circle =
+    document.querySelector('.progress-circle');
+
+    // Jika progress belum 100%
+    if(progressVal < 100){
+
+        circle.style.borderColor = "#ff4d4d";
+
     }
+
+    // Jika progress sudah 100%
+    else{
+
+        circle.style.borderColor = "#00CD00";
+
+    }
+
 </script>
+
 {% endblock %}

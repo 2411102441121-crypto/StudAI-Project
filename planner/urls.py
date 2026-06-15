@@ -7,8 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     path('login/', views.login, name='login'),
-    # WAJIB: Tambahkan ini agar Google Login Allauth berfungsi
-    path('accounts/', include('allauth.urls')), 
 
     # Rute aplikasi StudAI Anda
     path('register/', views.register, name='register'),

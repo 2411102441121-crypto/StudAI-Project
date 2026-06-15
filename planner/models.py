@@ -28,16 +28,28 @@ class Jadwal(models.Model):
     def __str__(self):
         return f"{self.kegiatan} ({self.tipe})"
     
-class ChatMessage(models.Model):
+# Model untuk menyimpan riwayat percakapan AI Chat
+class ChatMessage(models.Model):                    # models.py berfungsi sebagai blueprint atau rancangan tabel database.
+
+    # Pilihan pengirim pesan
     SENDER_CHOICES = [
         ('user', 'User'),
         ('ai', 'AI'),
     ]
+
+    # Relasi ke tabel User (siapa pemilik chat)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # Menyimpan jenis pengirim: user atau AI
     sender = models.CharField(max_length=10, choices=SENDER_CHOICES)
+
+    # Menyimpan isi pesan
     message = models.TextField()
+
+    # Menyimpan waktu pesan dibuat otomatis
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    # Tampilan data yang lebih mudah dibaca di Django Admin
     def __str__(self):
         return f"{self.user.username} - {self.sender}: {self.message[:20]}"
     

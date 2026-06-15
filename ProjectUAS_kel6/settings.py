@@ -10,19 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 from logging import root
-import os
-from dotenv import load_dotenv
+import os                       # Mengakses variabel lingkungan (environment variable)
+from dotenv import load_dotenv  # Membaca file .env
 
 #import dj_database_url # HOSTING: Untuk parsing DATABASE_URL dari Railway
 
-# Load file .env
+# Load semua variabel yang ada di file .env
 load_dotenv()
 
-# Gunakan variabel dari .env
+# Mengambil SECRET_KEY dari file .env
 SECRET_KEY = os.getenv('SECRET_KEY')
+
+# Mengambil nilai DEBUG dari file .env
 DEBUG = os.getenv('DEBUG') == 'True'
 
-# API Gemini
+# Mengambil API Key Google Gemini dari file .env
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 from pathlib import Path
@@ -52,11 +54,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+    'django.contrib.sites',         # Diperlukan untuk Django Allauth
     'planner',
+
+    # Allauth aplikasi untuk Google Login
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+
+    # Provider Google untuk Allauth
     'allauth.socialaccount.providers.google',
 ]
 
@@ -161,8 +167,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SITE_ID = 1
+# Allauth membutuhkan SITE_ID. Angka 1 merujuk pada domain utama kita di Django Admin
+SITE_ID = 1 
 
+# Menentukan Authentication Backend agar Django bisa login pakai akun biasa DAN akun Google
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
@@ -180,11 +188,11 @@ SOCIALACCOUNT_PROVIDERS = {
 # Tambahkan ini agar tidak muncul halaman konfirmasi "Lanjutkan"
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# Di dalam settings.py
-LOGIN_URL = '/login/'  # Sesuaikan dengan 'name' pada path login di urls.py kamu
-# LOGIN_REDIRECT_URL = 'home'
+LOGIN_URL = '/login/'
+
+# Alur Redirect setelah login/logout --> allauth
 LOGIN_REDIRECT_URL = '/home/'
-ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # Opsional: arahkan ke login setelah logout
+ACCOUNT_LOGOUT_REDIRECT_URL = 'login/' # arahkan ke login setelah logout
 
 # Izinkan domain Railway untuk mengirim data POST/Formulir
 CSRF_TRUSTED_ORIGINS = [

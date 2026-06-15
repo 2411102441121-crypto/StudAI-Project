@@ -5,7 +5,7 @@ from .forms import JadwalForm
 from datetime import date, datetime, timedelta
 
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required # Authentication Guard
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 
@@ -57,30 +57,84 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
+# Fungsi login pengguna
 def login(request):
+
+    # Jika tombol Login ditekan
     if request.method == 'POST':
+
+        # Mengambil username dari form
         u_name = request.POST.get('username')
+
+        # Mengambil password dari form
         p_word = request.POST.get('password')
-        user = authenticate(request, username=u_name, password=p_word)
+
+        # Memeriksa kecocokan username dan password di database
+        user = authenticate(
+            request,
+            username=u_name,
+            password=p_word
+        )
+
+        # Jika akun ditemukan
         if user is not None:
-            auth_login(request, user)
+
+            # Membuat session login
+            auth_login(request, user) # Sehingga user tidak perlu login lagi setiap pindah halaman.
+
+            # Arahkan ke halaman home
             return redirect('home')
+
         else:
-            return render(request, 'login.html', {'error': 'Username atau password salah'})
+            # Menampilkan pesan error jika login gagal
+            return render(
+                request,
+                'login.html',
+                {'error': 'Username atau password salah'}
+            )
+
+    # Menampilkan halaman login saat pertama kali dibuka
     return render(request, 'login.html')
 
+# Fungsi untuk registrasi akun baru
 def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save() 
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Akun berhasil dibuat untuk {username}. Silakan login.')
-            return redirect('login') 
-    else:
-        form = UserCreationForm()
-    return render(request, 'register.html', {'form': form})
 
+    # Jika user menekan tombol Register
+    if request.method == 'POST':
+
+        # Mengambil data form yang dikirim dari register.html
+        form = UserCreationForm(request.POST)
+
+        # Validasi data form (Username belum dipakai, Password minimal 8 karakter, Password dan Confirm Password sama)
+        if form.is_valid():
+
+            # Menyimpan akun baru ke database
+            form.save()
+
+            # Mengambil username yang berhasil didaftarkan
+            username = form.cleaned_data.get('username')
+
+            # Menampilkan pesan sukses
+            messages.success(
+                request,
+                f'Akun berhasil dibuat untuk {username}. Silakan login.'
+            )
+
+            # Pindah ke halaman login
+            return redirect('login')
+
+    else:
+        # Menampilkan form kosong saat halaman pertama kali dibuka
+        form = UserCreationForm()
+
+    # Menampilkan halaman register.html
+    return render(
+        request,
+        'register.html',
+        {'form': form}
+    )
+
+@login_required
 def tambah_jadwal(request):
     if request.method == 'POST':
         tipe = request.POST.get('tipe')
@@ -103,6 +157,7 @@ def tambah_jadwal(request):
         return redirect('home')
     return render(request, 'tambah_jadwal.html')
 
+@login_required
 def edit_jadwal(request, pk):
     jadwal = get_object_or_404(Jadwal, pk=pk)
     if request.method == 'POST':
@@ -124,6 +179,7 @@ def edit_jadwal(request, pk):
         return redirect('home')
     return render(request, 'edit_jadwal.html', {'jadwal': jadwal})
 
+@login_required
 def hapus_jadwal(request, id):
     jadwal = get_object_or_404(Jadwal, id=id)
     if request.method == "POST":
@@ -214,6 +270,7 @@ def hapus_folder(request, folder_id):
     folder.delete()
     return redirect('book_main')
 
+@login_required
 def hapus_modul(request, modul_id):
     if request.method == 'POST':
         modul = get_object_or_404(Modul, id=modul_id)
@@ -228,80 +285,143 @@ def toggle_selesai(request, jadwal_id):
     jadwal.save()
     return redirect('schedule')
 
-@login_required 
+# Menampilkan halaman AI Chat
+@login_required
 def ai_chat(request):
-    history = ChatMessage.objects.filter(user=request.user).order_by('timestamp')
-    return render(request, 'ai_chat.html', {'history': history})
 
+    # Mengambil riwayat chat milik user yang sedang login
+    history = ChatMessage.objects.filter(
+        user=request.user
+    ).order_by('timestamp')
+
+    # Mengirim data history ke ai_chat.html
+    return render(
+        request,
+        'ai_chat.html',
+        {'history': history}
+    )
+
+
+# Endpoint API untuk menerima pertanyaan dari frontend
 @csrf_exempt
 @login_required
 def api_chat_response(request):
+
+    # Hanya menerima request POST
     if request.method == "POST":
+
         try:
+
+            # Membaca data JSON dari frontend
             data = json.loads(request.body)
+
+            # Mengambil isi pesan user
             user_message = data.get("message", "")
 
-            # 1. Simpan pesan user ke database
-            ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
+            # Menyimpan pesan user ke database
+            ChatMessage.objects.create(
+                user=request.user,
+                sender='user',
+                message=user_message
+            )
 
-            # 2. Konfigurasi Google Gemini API
-            # Tambahkan "models/" sebelum nama modelnya agar Google mengenali jalurnya
+            # Menentukan model Gemini yang digunakan
             model_name = "models/gemini-2.5-flash"
-            api_token = settings.GEMINI_API_KEY
-            
-            # Gabungkan menjadi URL endpoint yang utuh
-            api_url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_token}"
 
+            # Mengambil API Key dari settings.py
+            api_token = settings.GEMINI_API_KEY
+
+            # Membuat endpoint Gemini API (proses pembuatan URL (Alamat Web) yang digunakan oleh Django untuk menghubungi server Google Gemini)
+            api_url = (
+                f"https://generativelanguage.googleapis.com/"
+                f"v1beta/{model_name}:generateContent"
+                f"?key={api_token}"
+            )
+
+            # Header request
             headers = {
                 "Content-Type": "application/json"
             }
 
-            # 3. Sesuaikan Format Payload JSON untuk Gemini
-            # Struktur Gemini: {"contents": [{"parts": [{"text": "pesan"}]}]}
+            # Format JSON yang dikirim ke Gemini
             payload = {
                 "contents": [
                     {
                         "parts": [
-                            {"text": user_message}
+                            {
+                                "text": user_message
+                            }
                         ]
                     }
                 ]
             }
 
-            print(api_url)
+            # Mengirim pertanyaan ke Gemini
+            response = requests.post(
+                api_url,
+                headers=headers,
+                json=payload
+            )
 
-            # 4. Kirim Request ke Google
-            response = requests.post(api_url, headers=headers, json=payload)
-
-            print(response.status_code)
-            print(response.text)
-
+            # Jika server Gemini sedang sibuk
             if response.status_code == 503:
+
                 return JsonResponse({
                     "status": "error",
                     "reply": "StudAI sedang ramai digunakan. Silakan coba lagi beberapa saat."
-                    })
+                })
 
+            # Jika request berhasil
             if response.status_code == 200:
-                response_data = response.json()
-                
-                # 5. Cara membaca jawaban/output dari JSON Google Gemini
-                try:
-                    ai_reply = response_data["candidates"][0]["content"]["parts"][0]["text"]
-                except (KeyError, IndexError):
-                    ai_reply = "Maaf, sistem gagal membaca respon dari AI."
 
-                # 6. Simpan pesan AI ke database dan kirim kembali ke frontend
-                ChatMessage.objects.create(user=request.user, sender='ai', message=ai_reply)
-                return JsonResponse({"status": "success", "reply": ai_reply})
+                response_data = response.json()
+
+                try:
+                    # Mengambil jawaban AI dari response Gemini (kotak JSON)
+                    ai_reply = response_data[
+                        "candidates"
+                    ][0][
+                        "content"
+                    ][
+                        "parts"
+                    ][0][
+                        "text"
+                    ]
+
+                except (KeyError, IndexError):
+
+                    ai_reply = (
+                        "Maaf, sistem gagal membaca respon dari AI."
+                    )
+
+                # Menyimpan jawaban AI ke database
+                ChatMessage.objects.create(
+                    user=request.user,
+                    sender='ai',
+                    message=ai_reply
+                )
+
+                # Mengirim jawaban AI ke frontend
+                return JsonResponse({
+                    "status": "success",
+                    "reply": ai_reply
+                })
+
             else:
+
+                # Menampilkan pesan error dari Gemini
                 return JsonResponse({
                     "status": "error",
                     "reply": response.text
-                    })
+                })
 
         except Exception as e:
-            return JsonResponse({"status": "error", "reply": str(e)})
+
+            # Menangani error yang tidak terduga
+            return JsonResponse({
+                "status": "error",
+                "reply": str(e)
+            })
 
 @login_required
 def profil(request):
