@@ -1,9 +1,14 @@
+"""
+"Terminal Induk" untuk mengontrol seluruh aplikasi.
+(Login Google) adalah sistem akun global yang dipakai untuk seluruh web (bukan cuma milik satu fitur saja)
+
+"""
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-# SATUKAN semua path ke dalam satu list urlpatterns saja
 urlpatterns = [
     path('admin/', admin.site.urls),
     

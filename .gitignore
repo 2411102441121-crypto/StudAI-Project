@@ -1,3 +1,6 @@
+# File .gitignore digunakan untuk memberi tahu Git file atau folder 
+# mana yang tidak perlu dimasukkan ke repository GitHub.
+
 # Django
 db.sqlite3
 __pycache__/

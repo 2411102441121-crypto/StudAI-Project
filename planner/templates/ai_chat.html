@@ -1,38 +1,46 @@
-{% extends 'base.html' %}
-{% load static %}
+<!-- 
+    Halaman ini tidak langsung terhubung ke Gemini. 
+    JavaScript menggunakan Fetch API untuk mengirim pesan ke endpoint /ai_chat/get_response/. 
+    Endpoint tersebut diproses oleh Django di views.py, 
+    lalu Django yang berkomunikasi dengan Google Gemini API dan mengembalikan jawaban ke halaman ini.
+
+-->
+
+{% extends 'base.html' %} <!-- Menggunakan layout utama aplikasi -->
+{% load static %} <!-- Mengaktifkan penggunaan file statis -->
 
 {% block content %}
 <style>
-    /* Chat Container - Diperbarui agar fit dengan tinggi layar browser */
+    /* Container utama halaman AI Chat */
     .chat-container {
         display: flex;
         flex-direction: column;
-        height: calc(100vh - 70px); /* Membatasi tinggi halaman agar tidak melebihi layar browser */
+        height: calc(100vh - 70px);
         position: relative;
         background: transparent;
         width: 100%;
     }
 
-    /* Area pesan chat yang bisa di-scroll - Diperbarui pembatas lebarnya */
+    /* Area riwayat percakapan */
     .chat-messages {
         flex: 1;
-        overflow-y: auto; /* Hanya area ini yang boleh memunculkan scrollbar */
+        overflow-y: auto; /* Hanya area chat yang bisa di-scroll */
         padding: 15px;
-        margin-bottom: 110px; /* Ditambah sedikit ruang agar bubble chat paling bawah tidak tertutup form input */
+        margin-bottom: 110px;
         display: flex;
         flex-direction: column;
         gap: 15px;
         scrollbar-width: none;
-        
-        /* KUNCI GEMINI: Batasi lebar area isi chat dan bawa ke posisi tengah */
+
         width: 100%;
         max-width: 768px;
         margin-left: auto;
         margin-right: auto;
     }
+
     .chat-messages::-webkit-scrollbar { display: none; }
 
-    /* Bubble Chat Style (Tetap Aman) */
+    /* Style bubble chat */
     .bubble {
         max-width: 85%;
         padding: 12px 16px;
@@ -43,6 +51,7 @@
         word-wrap: break-word;
     }
 
+    /* Bubble jawaban AI */
     .bubble.ai {
         align-self: flex-start;
         background-color: white;
@@ -52,6 +61,7 @@
         width: 100%;
     }
 
+    /* Bubble pesan user */
     .bubble.user {
         align-self: flex-end;
         background: linear-gradient(135deg, #000066 0%, #0000cc 100%);
@@ -60,40 +70,41 @@
         box-shadow: 0 4px 15px rgba(0,0,64,0.2);
     }
 
-    /* KUNCI GEMINI: Kontainer pembungkus luar area input (Melayang penuh secara horizontal) */
+    /* Container input chat */
     .chat-input-container {
         position: fixed;
-        bottom: 85px; /* Jarak gantung aman di atas navbar menu utama bawah */
+        bottom: 85px;
         left: 0;
         right: 0;
         background: transparent;
-        padding: 0 24px; /* Celah tipis di ujung kiri & kanan layar browser */
+        padding: 0 24px;
         z-index: 10;
-        pointer-events: none; /* Supaya background transparan tidak memblokir scroll/klik di belakangnya */
+        pointer-events: none;
     }
 
-    /* KUNCI GEMINI: Kotak Input Utama yang membatasi ukuran lebar (max-width disamakan dengan chat-messages) */
+    /* Area input dan tombol kirim */
     .chat-input-area {
-        max-width: 768px; /* Ukuran lebar proporsional persis layout Gemini */
-        margin: 0 auto; /* Otomatis membagi ruang kosong kiri kanan agar kotak di tengah */
-        background: #f0f4f9; /* Warna dasar abu-abu sangat muda ala Gemini */
+        max-width: 768px;
+        margin: 0 auto;
+        background: #f0f4f9;
         padding: 8px 18px;
-        border-radius: 28px; /* Sudut melengkung kapsul sempurna */
+        border-radius: 28px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 20px rgba(0,0,0,0.04);
         display: flex;
         align-items: center;
         gap: 10px;
-        pointer-events: auto; /* Mengaktifkan kembali fungsi klik/ketik di dalam bungkusan */
+        pointer-events: auto;
         border: 1px solid rgba(0, 0, 0, 0.02);
         transition: background-color 0.2s, box-shadow 0.2s;
     }
 
-    /* Efek interaktif saat kolom input teks diklik */
+    /* Efek saat input aktif */
     .chat-input-area:focus-within {
-        background: #ffffff; /* Berubah menjadi putih bersih */
-        box-shadow: 0 4px 18px rgba(0,0,0,0.08); /* Shadow halus naik ke atas */
+        background: #ffffff;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.08);
     }
 
+    /* Input pertanyaan user */
     .chat-input {
         border: none;
         flex-grow: 1;
@@ -104,8 +115,9 @@
         color: #1f1f1f;
     }
 
+    /* Tombol kirim */
     .btn-send {
-        background: transparent; 
+        background: transparent;
         color: #000066;
         width: 38px;
         height: 38px;
@@ -117,12 +129,13 @@
         transition: background-color 0.2s, transform 0.1s;
         cursor: pointer;
     }
-    .btn-send:hover { 
+
+    .btn-send:hover {
         background-color: rgba(0, 0, 102, 0.05);
-        transform: scale(1.05); 
+        transform: scale(1.05);
     }
 
-    /* Status Info (Typing/Thinking) di atas input */
+    /* Status loading AI */
     .status-info {
         max-width: 768px;
         margin: 0 auto 6px auto;
@@ -135,21 +148,33 @@
 </style>
 
 <div class="chat-container">
+
+    <!-- Header halaman AI Chat -->
     <div class="chat-header mt-3 mb-4 text-center">
         <h4 class="fw-bold mb-0">StudAI Chat</h4>
         <p class="text-muted small">Tanya soal di sini</p>
     </div>
 
+    <!-- Menampilkan riwayat chat dari database -->
     <div class="chat-messages" id="chatMessages">
-        {% for chat in history %}
-            <div class="bubble {{ chat.sender }} shadow-sm">
+
+        <!-- Loop seluruh chat yang dikirim dari views.py -->
+        {% for chat in history %} <!-- menampilkan riwayat chat dari database. Kemudian ditampilkan menggunakan perulangan Django Template -->
+            <div class="bubble {{ chat.sender }} shadow-sm"> <!-- Menentukan jenis bubble berdasarkan pengirim -->
+
+                <!-- Jika pengirim AI, render markdown -->
                 {% if chat.sender == 'ai' %}
                     <div class="markdown-rendered"></div>
                     <textarea class="raw-markdown" style="display: none;">{{ chat.message }}</textarea>
+
+                <!-- Jika pengirim user, tampilkan teks biasa -->
                 {% else %}
                     {{ chat.message }}
                 {% endif %}
+
             </div>
+
+        <!-- Tampil jika belum ada riwayat chat -->
         {% empty %}
             <div class="bubble ai shadow-sm">
                 Halo👋🏻! Ada tugas atau materi kuliah yang ingin dibahas?
@@ -157,107 +182,149 @@
         {% endfor %}
     </div>
 
+    <!-- Area input chat -->
     <div class="chat-input-container">
+
+        <!-- Status "StudAI sedang berpikir..." -->
         <div class="status-info" id="statusInfo"></div>
 
         <div class="chat-input-area">
-            <input type="text" class="chat-input" id="userInput" placeholder="Ketik pesan di sini...">
-            
-            <button class="btn-send" onclick="sendMessage()">
+
+            <!-- Input pertanyaan pengguna -->
+            <input type="text"
+                   class="chat-input"
+                   id="userInput"
+                   placeholder="Ketik pesan di sini...">
+
+            <!-- Tombol kirim pesan -->
+            <button class="btn-send" onclick="sendMessage()"> <!--mengambil pesan user-->
                 <i class="fas fa-paper-plane"></i>
             </button>
+
         </div>
     </div>
 </div>
 
+<!-- Library untuk mengubah Markdown menjadi HTML -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-    const chatMessages = document.getElementById('chatMessages');
-    const userInput = document.getElementById('userInput');
-    const statusInfo = document.getElementById('statusInfo');
 
+<script>
+
+    // Mengambil elemen yang akan digunakan JavaScript
+    const chatMessages = document.getElementById('chatMessages'); // Area riwayat chat
+    const userInput = document.getElementById('userInput'); // Input pengguna
+    const statusInfo = document.getElementById('statusInfo'); // Status loading AI
+
+    // Mengisi textbox secara otomatis
     function fillInput(text) {
         userInput.value = text;
         userInput.focus();
     }
 
+    // Mengambil pesan user dan mengirim ke backend
     function sendMessage() {
-        const message = userInput.value.trim();
+        const message = userInput.value.trim(); // Mengambil isi input dan menghapus spasi kosong
+
         if (message !== "") {
-            addBubble(message, 'user');
-            userInput.value = "";
-            showAiResponse(message);
+            addBubble(message, 'user'); // tampilkan pesan user
+            userInput.value = ""; // kosongkan input
+            showAiResponse(message); // Mengirim pesan ke backend Django
         }
     }
 
+    // Menambahkan bubble chat ke halaman
     function addBubble(text, sender) {
+
         const bubble = document.createElement('div');
         bubble.className = `bubble ${sender} shadow-sm`;
 
         if (sender === 'ai') {
-            bubble.innerHTML = marked.parse(text);
+            bubble.innerHTML = marked.parse(text); // render markdown AI
         } else {
             bubble.innerHTML = text;
         }
 
         chatMessages.appendChild(bubble);
+
+        // Scroll otomatis ke pesan terbaru
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    // Menghubungkan frontend dengan backend Django
     function showAiResponse(userMessage) {
+
         statusInfo.innerText = "StudAI sedang berpikir...";
-        
-        fetch('/ai_chat/get_response/', {
+
+        fetch('/ai_chat/get_response/', { // Mengirim request POST ke Django
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ message: userMessage })
+
+            // Kirim pesan dalam format JSON
+            body: JSON.stringify({
+                message: userMessage
+            })
         })
+
+        // Ubah response menjadi JSON
         .then(response => response.json())
+
+        // Menampilkan jawaban AI
         .then(data => {
+
             statusInfo.innerText = "";
+
             if (data.status === "success") {
                 addBubble(data.reply, 'ai');
             } else {
                 addBubble(data.reply, 'ai');
             }
         })
+
+        // Menangani error koneksi
         .catch(error => {
+
             statusInfo.innerText = "";
-            addBubble("Waduh, koneksi ke server terputus nih.", "ai");
+
+            addBubble(
+                "Waduh, koneksi ke server terputus nih.",
+                "ai"
+            );
+
             console.error('Error:', error);
         });
     }
 
-    window.onload = function() {
+    // Dijalankan saat halaman selesai dimuat
+    window.onload = function() { // window.onload = menampilkan kembali chat lama saat halaman direfresh
+
+        // Render ulang markdown dari database
         document.querySelectorAll('.bubble.ai').forEach(bubble => {
+
             const rawTextarea = bubble.querySelector('.raw-markdown');
             const renderContainer = bubble.querySelector('.markdown-rendered');
-            
+
             if (rawTextarea && renderContainer) {
-                renderContainer.innerHTML = marked.parse(rawTextarea.value);
+                renderContainer.innerHTML =
+                    marked.parse(rawTextarea.value);
             }
         });
-        
+
+        // Scroll ke chat paling bawah
         if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const preset = urlParams.get('preset');
-        if (preset === 'atur_jadwal') {
-            if (userInput) {
-                userInput.value = "Halo StudAI! Tolong bantu aku atur jadwal belajar untuk hari ini.";
-                userInput.focus();
-            }
+            chatMessages.scrollTop =
+                chatMessages.scrollHeight;
         }
     }
 
+    // Kirim pesan saat tombol Enter ditekan
     userInput.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             sendMessage();
         }
     });
+
 </script>
+
 {% endblock %}
