@@ -53,6 +53,15 @@ class ChatMessage(models.Model):                    # models.py berfungsi sebaga
     def __str__(self):
         return f"{self.user.username} - {self.sender}: {self.message[:20]}"
     
+class FAQ(models.Model):
+    pertanyaan = models.CharField(max_length=255)
+    jawaban = models.TextField()
+
+    jumlah_digunakan = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.pertanyaan
+    
 class Folder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     nama = models.CharField(max_length=255)

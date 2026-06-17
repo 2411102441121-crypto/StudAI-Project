@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Jadwal, ChatMessage, Folder, Modul
+from .models import Jadwal, ChatMessage, Folder, Modul, FAQ
 from .forms import JadwalForm
+
 
 from datetime import date, datetime, timedelta
 
@@ -289,16 +290,19 @@ def toggle_selesai(request, jadwal_id):
 @login_required
 def ai_chat(request):
 
-    # Mengambil riwayat chat milik user yang sedang login
     history = ChatMessage.objects.filter(
         user=request.user
     ).order_by('timestamp')
 
-    # Mengirim data history ke ai_chat.html
+    faq_list = FAQ.objects.filter(jumlah_digunakan__gte=2).order_by('-jumlah_digunakan')[:10]
+
     return render(
         request,
         'ai_chat.html',
-        {'history': history}
+        {
+            'history': history,
+            'faq_list': faq_list
+        }
     )
 
 
@@ -306,118 +310,91 @@ def ai_chat(request):
 @csrf_exempt
 @login_required
 def api_chat_response(request):
-
-    # Hanya menerima request POST
     if request.method == "POST":
-
         try:
-
-            # Membaca data JSON dari frontend
             data = json.loads(request.body)
+            user_message = data.get("message", "").strip()
 
-            # Mengambil isi pesan user
-            user_message = data.get("message", "")
+            if not user_message:
+                return JsonResponse({"status": "error", "reply": "Pesan tidak boleh kosong."})
 
-            # Menyimpan pesan user ke database
-            ChatMessage.objects.create(
-                user=request.user,
-                sender='user',
-                message=user_message
-            )
+            # 1. CEK DATA DI DATABASE (Hemat Token)
+            faq = FAQ.objects.filter(pertanyaan__iexact=user_message).first()
+            
+            if faq:
+                # Jika sudah pernah ditanyakan sebelumnya, naikkan hit jumlah_digunakan
+                faq.jumlah_digunakan += 1
+                faq.save()
+                
+                # Simpan ke riwayat chat user saat ini
+                ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
+                ChatMessage.objects.create(user=request.user, sender='ai', message=faq.jawaban)
+                
+                # Ambil list FAQ terupdate untuk dikirim ke frontend real-time (syarat tampil: minimal ditanya 2 kali)
+                faq_terupdate = list(FAQ.objects.filter(jumlah_digunakan__gte=2).order_by('-jumlah_digunakan')[:10].values('pertanyaan'))
+                
+                return JsonResponse({
+                    "status": "success",
+                    "reply": faq.jawaban,
+                    "faq_list": faq_terupdate
+                })
 
-            # Menentukan model Gemini yang digunakan
+            # 2. JIKA BELUM ADA, TANYA GEMINI API
+            ChatMessage.objects.create(user=request.user, sender='user', message=user_message)
+
             model_name = "models/gemini-2.5-flash"
-
-            # Mengambil API Key dari settings.py
             api_token = settings.GEMINI_API_KEY
+            api_url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_token}"
 
-            # Membuat endpoint Gemini API (proses pembuatan URL (Alamat Web) yang digunakan oleh Django untuk menghubungi server Google Gemini)
-            api_url = (
-                f"https://generativelanguage.googleapis.com/"
-                f"v1beta/{model_name}:generateContent"
-                f"?key={api_token}"
-            )
-
-            # Header request
-            headers = {
-                "Content-Type": "application/json"
-            }
-
-            # Format JSON yang dikirim ke Gemini
+            headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [
                     {
-                        "parts": [
-                            {
-                                "text": user_message
-                            }
-                        ]
+                        "parts": [{"text": user_message}]
                     }
                 ]
             }
 
-            # Mengirim pertanyaan ke Gemini
-            response = requests.post(
-                api_url,
-                headers=headers,
-                json=payload
-            )
+            response = requests.post(api_url, headers=headers, json=payload)
 
-            # Jika server Gemini sedang sibuk
             if response.status_code == 503:
-
                 return JsonResponse({
                     "status": "error",
                     "reply": "StudAI sedang ramai digunakan. Silakan coba lagi beberapa saat."
                 })
 
-            # Jika request berhasil
             if response.status_code == 200:
-
                 response_data = response.json()
-
                 try:
-                    # Mengambil jawaban AI dari response Gemini (kotak JSON)
-                    ai_reply = response_data[
-                        "candidates"
-                    ][0][
-                        "content"
-                    ][
-                        "parts"
-                    ][0][
-                        "text"
-                    ]
-
+                    ai_reply = response_data["candidates"][0]["content"]["parts"][0]["text"]
                 except (KeyError, IndexError):
+                    ai_reply = "Maaf, sistem gagal membaca respon dari AI."
 
-                    ai_reply = (
-                        "Maaf, sistem gagal membaca respon dari AI."
-                    )
+                # Simpan jawaban AI ke riwayat chat
+                ChatMessage.objects.create(user=request.user, sender='ai', message=ai_reply)
 
-                # Menyimpan jawaban AI ke database
-                ChatMessage.objects.create(
-                    user=request.user,
-                    sender='ai',
-                    message=ai_reply
+                # 3. OTOMATISASI FAQ (Simpan Pertanyaan Baru ke Database FAQ)
+                FAQ.objects.create(
+                    pertanyaan=user_message,
+                    jawaban=ai_reply,
+                    jumlah_digunakan=1  # Set hitungan awal = 1
                 )
 
-                # Mengirim jawaban AI ke frontend
+                # Ambil list FAQ terupdate untuk dikirim ke frontend real-time (syarat tampil: minimal ditanya 2 kali)
+                faq_terupdate = list(FAQ.objects.filter(jumlah_digunakan__gte=2).order_by('-jumlah_digunakan')[:10].values('pertanyaan'))
+
                 return JsonResponse({
                     "status": "success",
-                    "reply": ai_reply
+                    "reply": ai_reply,
+                    "faq_list": faq_terupdate
                 })
-
             else:
-
-                # Menampilkan pesan error dari Gemini
                 return JsonResponse({
                     "status": "error",
                     "reply": response.text
                 })
 
         except Exception as e:
-
-            # Menangani error yang tidak terduga
             return JsonResponse({
                 "status": "error",
                 "reply": str(e)
